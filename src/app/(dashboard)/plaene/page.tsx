@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import PresetKarte from '@/components/PresetKarte'
+import { parseJsonArray } from '@/lib/client-utils'
 import ErnaehrungsVorlageKarte from '@/components/ErnaehrungsVorlageKarte'
 import PlaeneFilter from '@/components/PlaeneFilter'
 import UebungHinzufuegenForm from '@/components/UebungHinzufuegenForm'
@@ -123,7 +124,7 @@ export default async function PlaenePage(props: Props) {
             ) : (
               <div className="space-y-3">
                 {presets.map(preset => (
-                  <PresetKarte key={preset.id} preset={preset} clients={alleClients} />
+                  <PresetKarte key={preset.id} preset={{ ...preset, ziele: parseJsonArray(preset.ziele) }} clients={alleClients} />
                 ))}
               </div>
             )}
@@ -205,8 +206,8 @@ export default async function PlaenePage(props: Props) {
                           {u.ausruestung && (
                             <span className="text-[10px] text-[#3a3a3a]">{u.ausruestung}</span>
                           )}
-                          {u.ziele.length > 0 && (
-                            <span className="text-[10px] text-[#3a3a3a]">{u.ziele.join(', ')}</span>
+                          {parseJsonArray(u.ziele).length > 0 && (
+                            <span className="text-[10px] text-[#3a3a3a]">{parseJsonArray(u.ziele).join(', ')}</span>
                           )}
                         </div>
                       </div>

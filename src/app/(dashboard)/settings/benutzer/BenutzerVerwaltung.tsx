@@ -8,7 +8,7 @@ type UserRow = {
   id: string
   email: string
   name: string
-  role: 'ADMIN' | 'STAFF'
+  role: string
   active: boolean
   createdAt: Date
 }

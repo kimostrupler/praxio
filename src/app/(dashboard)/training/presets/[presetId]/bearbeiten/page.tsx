@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import PresetBuilder from '@/components/PresetBuilder'
+import { parseJsonArray } from '@/lib/client-utils'
 
 export default async function PresetBearbeitenPage(
   props: {
@@ -53,7 +54,7 @@ export default async function PresetBearbeitenPage(
         assignedCount={assignedCount}
         initialName={preset.name}
         initialBeschreibung={preset.beschreibung ?? ''}
-        initialZiele={preset.ziele}
+        initialZiele={parseJsonArray(preset.ziele)}
         initialUebungen={initialUebungen}
       />
     </div>

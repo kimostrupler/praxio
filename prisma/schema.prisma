@@ -1,23 +1,10 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-}
-
-enum Geschlecht {
-  WEIBLICH
-  MAENNLICH
-  DIVERS
-}
-
-enum ClientStatus {
-  AKTIV
-  PAUSIERT
-  INAKTIV
 }
 
 model Client {
@@ -31,10 +18,10 @@ model Client {
   email           String?
   beruf           String?
   geburtsdatum    DateTime?
-  geschlecht      Geschlecht?
-  status          ClientStatus @default(AKTIV)
+  geschlecht      String?
+  status          String       @default("AKTIV")
   naechsterTermin DateTime?
-  tags            String[]     @default([])
+  tags            String       @default("[]")
   herkunft        String?
 
   anamnesen         Anamnese[]
@@ -55,12 +42,6 @@ model Client {
 
 // ── Rechnungen ───────────────────────────────────────────────────────────────
 
-enum RechnungStatus {
-  OFFEN
-  BEZAHLT
-  STORNIERT
-}
-
 model Rechnung {
   id         String          @id @default(cuid())
   createdAt  DateTime        @default(now())
@@ -70,7 +51,7 @@ model Rechnung {
   faellig    DateTime?
   clientId   String
   client     Client          @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  status     RechnungStatus  @default(OFFEN)
+  status     String          @default("OFFEN")
   bezahltAm  DateTime?
   notizen          String?
   mwst             Float           @default(0)
@@ -170,7 +151,7 @@ model Anamnese {
   clientId  String
   client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  ziele              String[]
+  ziele              String   @default("[]")
   zieleSonstiges     String?
   motivation         String?
   zielWichtigkeit    Int?
@@ -187,7 +168,7 @@ model Anamnese {
   sonstigeMasse        String?
   ernaehrungBewertung                  String?
   mahlzeitenProTag                     Int?
-  essgewohnheiten                      String[]
+  essgewohnheiten                      String   @default("[]")
   essgewohnheitenSonstiges             String?
   lebensmittelUnvertraeglichkeit       Boolean?
   lebensmittelUnvertraeglichkeitWelche String?
@@ -243,7 +224,7 @@ model Uebung {
   name          String
   kategorie     String
   beschreibung  String?
-  ziele         String[]
+  ziele         String   @default("[]")
   schwierigkeit String?
   ausruestung   String?
   isCustom      Boolean @default(false)
@@ -258,7 +239,7 @@ model TrainingsPreset {
   updatedAt    DateTime @updatedAt
   name         String
   beschreibung String?
-  ziele        String[]
+  ziele        String   @default("[]")
 
   uebungen        PresetUebung[]
   trainingsplaene TrainingsPlan[]
@@ -383,11 +364,6 @@ model Warteliste {
 
 // ── Benutzer (multi-user auth) ────────────────────────────────────────────────
 
-enum UserRole {
-  ADMIN
-  STAFF
-}
-
 model User {
   id           String   @id @default(cuid())
   createdAt    DateTime @default(now())
@@ -395,7 +371,7 @@ model User {
   email        String   @unique
   passwordHash String
   name         String
-  role         UserRole @default(STAFF)
+  role         String   @default("STAFF")
   active       Boolean  @default(true)
   sessionVersion Int     @default(0)
   theme        String?  // personal theme override (null = use global default)

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition } from 'react'
 import Link from 'next/link'
 import { updateRechnungStatus, deleteRechnung } from '@/app/actions/rechnungen'
-import type { RechnungStatus } from '@prisma/client'
+import type { RechnungStatus } from '@/lib/formatting'
 
 type Props = {
   rechnungId:    string
@@ -11,7 +11,7 @@ type Props = {
   clientEmail:   string | null
   clientVorname: string
   anrede?:       string | null
-  status:        RechnungStatus
+  status:        string
 }
 
 export default function RechnungAktionen({ rechnungId, rechnungNr, clientEmail, clientVorname, anrede, status }: Props) {

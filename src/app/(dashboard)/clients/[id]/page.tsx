@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { avatarColor } from '@/lib/avatar'
 import { CHF, rBrutto, RECHNUNG_STATUS_LABEL, RECHNUNG_STATUS_STYLE } from '@/lib/formatting'
-import { buildGewichtsDaten } from '@/lib/client-utils'
+import { buildGewichtsDaten, parseJsonArray } from '@/lib/client-utils'
 import { praxisName } from '@/lib/praxis'
 import ZieleBlock from '@/components/ZieleBlock'
 import CollapsibleSection from '@/components/CollapsibleSection'
@@ -288,7 +288,7 @@ export default async function ClientDetailPage(
               </div>
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <ClientStatusSelect clientId={params.id} status={client.status} />
-                <ClientTags clientId={params.id} initialTags={client.tags} />
+                <ClientTags clientId={params.id} initialTags={parseJsonArray(client.tags)} />
               </div>
             </div>
           </div>
@@ -549,7 +549,7 @@ export default async function ClientDetailPage(
                       {latest.stressLevel != null && <span className="text-[#666666]">Stress {latest.stressLevel}/10</span>}
                       {latest.schlafStunden != null && <span className="text-[#666666]">{latest.schlafStunden}h Schlaf</span>}
                       {latest.wohlbefinden && <span className="text-[#666666]">Befinden: {latest.wohlbefinden}</span>}
-                      {latest.ziele.length > 0 && <span className="text-[#666666]">Ziele: {latest.ziele.join(', ')}</span>}
+                      {parseJsonArray(latest.ziele).length > 0 && <span className="text-[#666666]">Ziele: {parseJsonArray(latest.ziele).join(', ')}</span>}
                     </div>
                   </div>
                 ) : (

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { Document, Page, Text, View, StyleSheet, renderToStream } from '@react-pdf/renderer'
 import { getLogoData } from '@/lib/logo'
 import { C, base, formatDate, nodeStreamToWeb, praxisName, PdfHeader } from '@/lib/pdf'
+import { parseJsonArray } from '@/lib/client-utils'
 
 const s = StyleSheet.create({
   clientRow:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
@@ -67,6 +68,8 @@ function AnamnesesPDF({ a, logoData }: { a: AnamneseData; logoData: string | nul
   const bmiVal = a.aktuellesGewicht && a.groesse
     ? (a.aktuellesGewicht / Math.pow(a.groesse / 100, 2)).toFixed(1)
     : null
+  const aZiele = parseJsonArray(a.ziele)
+  const aEssgewohnheiten = parseJsonArray(a.essgewohnheiten)
 
   return (
     <Document title={`Anamnesebogen – ${client.vorname} ${client.nachname}`} author={praxisName}>
@@ -84,13 +87,13 @@ function AnamnesesPDF({ a, logoData }: { a: AnamneseData; logoData: string | nul
           </View>
         </View>
 
-        {(a.ziele.length > 0 || a.motivation) && (
+        {(aZiele.length > 0 || a.motivation) && (
           <Sec title="Ziele & Motivation">
-            {a.ziele.length > 0 && (
+            {aZiele.length > 0 && (
               <View style={s.cellFull}>
                 <Text style={s.label}>Ziele</Text>
                 <View style={s.tags}>
-                  {a.ziele.map(z => <Text key={z} style={s.tag}>{z}</Text>)}
+                  {aZiele.map(z => <Text key={z} style={s.tag}>{z}</Text>)}
                 </View>
               </View>
             )}
@@ -122,7 +125,7 @@ function AnamnesesPDF({ a, logoData }: { a: AnamneseData; logoData: string | nul
           <Row label="Alkohol"              value={V(a.alkoholPortionen, ' Port./Woche')} />
           <Row label="Softdrinks"           value={V(a.softdrinksLiter, ' L/Tag')} />
           <Row label="Ernährungstagebuch"   value={B(a.ernaehrungstagebuch)} />
-          {a.essgewohnheiten.length > 0 && <RowFull label="Essgewohnheiten" value={a.essgewohnheiten.join(', ')} />}
+          {aEssgewohnheiten.length > 0 && <RowFull label="Essgewohnheiten" value={aEssgewohnheiten.join(', ')} />}
           {a.lebensmittelUnvertraeglichkeit && <RowFull label="Unverträglichkeiten" value={a.lebensmittelUnvertraeglichkeitWelche} />}
         </Sec>
 

@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import TrainingsPlanBuilder from '@/components/TrainingsPlanBuilder'
+import { parseJsonArray } from '@/lib/client-utils'
 
 export default async function NeuerTrainingsplanPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -26,7 +27,7 @@ export default async function NeuerTrainingsplanPage(props: { params: Promise<{ 
 
   if (!client) notFound()
 
-  const clientZiele = client.anamnesen[0]?.ziele ?? []
+  const clientZiele = parseJsonArray(client.anamnesen[0]?.ziele)
 
   // Serialize for client component
   const prevPlansData = previousPlans.map(p => ({
@@ -64,7 +65,7 @@ export default async function NeuerTrainingsplanPage(props: { params: Promise<{ 
       <TrainingsPlanBuilder
         clientId={params.id}
         clientZiele={clientZiele}
-        alleUebungen={alleUebungen}
+        alleUebungen={alleUebungen.map(u => ({ ...u, ziele: parseJsonArray(u.ziele) }))}
         previousPlans={prevPlansData}
       />
     </div>

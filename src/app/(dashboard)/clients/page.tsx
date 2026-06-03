@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import type { ClientStatus } from '@prisma/client'
+import type { ClientStatus } from '@/lib/formatting'
 import { getCachedClients } from '@/lib/queries'
 import { prisma } from '@/lib/db'
 import WartelisteForm from '@/components/WartelisteForm'

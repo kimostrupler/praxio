@@ -4,10 +4,10 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { avatarColor } from '@/lib/avatar'
 import { updateClientStatus } from '@/app/actions/clients'
-import type { ClientStatus } from '@prisma/client'
+import type { ClientStatus } from '@/lib/formatting'
 
-const STATUS_LABEL: Record<ClientStatus, string> = { AKTIV: 'Aktiv', PAUSIERT: 'Pausiert', INAKTIV: 'Inaktiv' }
-const STATUS_STYLE: Record<ClientStatus, string> = {
+const STATUS_LABEL: Record<string, string> = { AKTIV: 'Aktiv', PAUSIERT: 'Pausiert', INAKTIV: 'Inaktiv' }
+const STATUS_STYLE: Record<string, string> = {
   AKTIV:    'bg-emerald-950/40 text-emerald-400 border border-emerald-900/40',
   PAUSIERT: 'bg-orange-950/40 text-orange-400 border border-orange-900/40',
   INAKTIV:  'bg-[#1c1c1c] text-[#444444] border border-[#2e2e2e]',
@@ -29,8 +29,8 @@ type Client = {
   nachname: string
   email:    string | null
   telefon:  string | null
-  status:   ClientStatus
-  tags:     string[]
+  status:   string
+  tags:     string
   adresse:  string | null
   createdAt: Date
   anamnesen: { aktuellesGewicht: number | null }[]
@@ -58,7 +58,7 @@ export default function ClientListBulk({ clients }: { clients: Client[] }) {
     else setSelectedIds(new Set(clients.map(c => c.id)))
   }
 
-  function handleStatusChange(status: ClientStatus) {
+  function handleStatusChange(status: string) {
     setStatusDropOpen(false)
     const label = STATUS_LABEL[status]
     if (!confirm(`Status von ${selectedIds.size} Klient(en) auf "${label}" setzen?`)) return

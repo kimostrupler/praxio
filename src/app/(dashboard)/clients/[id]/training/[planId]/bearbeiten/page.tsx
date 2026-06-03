@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import TrainingsPlanBuilder from '@/components/TrainingsPlanBuilder'
+import { parseJsonArray } from '@/lib/client-utils'
 
 export default async function TrainingsplanBearbeitenPage(
   props: {
@@ -28,7 +29,7 @@ export default async function TrainingsplanBearbeitenPage(
 
   if (!client || !plan || plan.clientId !== params.id) notFound()
 
-  const clientZiele = client.anamnesen[0]?.ziele ?? []
+  const clientZiele = parseJsonArray(client.anamnesen[0]?.ziele)
 
   const initialUebungen = plan.uebungen.map(u => ({
     uebungId: u.uebungId,
@@ -56,7 +57,7 @@ export default async function TrainingsplanBearbeitenPage(
       <TrainingsPlanBuilder
         clientId={params.id}
         clientZiele={clientZiele}
-        alleUebungen={alleUebungen}
+        alleUebungen={alleUebungen.map(u => ({ ...u, ziele: parseJsonArray(u.ziele) }))}
         previousPlans={[]}
         editPlanId={params.planId}
         initialName={plan.name}

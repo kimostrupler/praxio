@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import type { Anamnese } from '@prisma/client'
 import { updateAnamniseDatum } from '@/app/actions/clients'
+import { parseJsonArray } from '@/lib/client-utils'
 
 type Props = { anamnese: Anamnese; clientId: string; isLatest: boolean }
 
@@ -49,6 +50,8 @@ export default function AnamneseKarte({ anamnese: a, clientId, isLatest }: Props
   const [dateVal, setDateVal] = useState(new Date(a.datum).toISOString().split('T')[0])
   const [, startTransition] = useTransition()
   const bmiVal = bmi(a.aktuellesGewicht, a.groesse)
+  const aZiele = parseJsonArray(a.ziele)
+  const aEssgewohnheiten = parseJsonArray(a.essgewohnheiten)
 
   const handleDateChange = (v: string) => {
     setDateVal(v)
@@ -96,9 +99,9 @@ export default function AnamneseKarte({ anamnese: a, clientId, isLatest }: Props
               </div>
             )}
 
-            {a.ziele.length > 0 && (
+            {aZiele.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
-                {a.ziele.map(z => (
+                {aZiele.map(z => (
                   <span key={z} className="text-[10px] bg-white/5 text-white/50 border border-white/10 px-1.5 py-0.5 rounded-full">{z}</span>
                 ))}
               </div>
@@ -132,9 +135,9 @@ export default function AnamneseKarte({ anamnese: a, clientId, isLatest }: Props
       {/* Full details */}
       {open && (
         <div className="border-t border-[#1c1c1c] px-5 py-5 space-y-5">
-          {(a.ziele.length > 0 || a.motivation) && (
+          {(aZiele.length > 0 || a.motivation) && (
             <Sec title="Ziele & Motivation">
-              <Row label="Ziele" value={a.ziele.join(', ')} />
+              <Row label="Ziele" value={aZiele.join(', ')} />
               <Row label="Wichtigkeit" value={a.zielWichtigkeit != null ? `${a.zielWichtigkeit}/10` : undefined} />
               <Row label="Bis wann" value={a.zielDatum} />
               <RowWide label="Motivation" value={a.motivation} />
@@ -157,7 +160,7 @@ export default function AnamneseKarte({ anamnese: a, clientId, isLatest }: Props
             <Row label="Mahlzeiten/Tag" value={a.mahlzeitenProTag} />
             <Row label="Wasser" value={V(a.wasserLiter, ' L/Tag')} />
             <Row label="Kaffee" value={V(a.kaffeeTassen, ' Tassen')} />
-            {a.essgewohnheiten.length > 0 && <RowWide label="Gewohnheiten" value={a.essgewohnheiten.join(', ')} />}
+            {aEssgewohnheiten.length > 0 && <RowWide label="Gewohnheiten" value={aEssgewohnheiten.join(', ')} />}
             {a.lebensmittelUnvertraeglichkeit && <RowWide label="Unverträglichkeiten" value={a.lebensmittelUnvertraeglichkeitWelche} />}
           </Sec>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

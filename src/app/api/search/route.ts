@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
 
   const clientNameFilter = {
     OR: [
-      { vorname:  { contains: q, mode: 'insensitive' as const } },
-      { nachname: { contains: q, mode: 'insensitive' as const } },
+      { vorname:  { contains: q } },
+      { nachname: { contains: q } },
     ],
   }
 
@@ -21,9 +21,9 @@ export async function GET(req: NextRequest) {
     prisma.client.findMany({
       where: {
         OR: [
-          { vorname:  { contains: q, mode: 'insensitive' } },
-          { nachname: { contains: q, mode: 'insensitive' } },
-          { email:    { contains: q, mode: 'insensitive' } },
+          { vorname:  { contains: q } },
+          { nachname: { contains: q } },
+          { email:    { contains: q } },
         ],
       },
       select: { id: true, vorname: true, nachname: true, status: true, email: true },
@@ -33,8 +33,8 @@ export async function GET(req: NextRequest) {
     prisma.rechnung.findMany({
       where: {
         OR: [
-          { nummer:  { contains: q, mode: 'insensitive' } },
-          { betreff: { contains: q, mode: 'insensitive' } },
+          { nummer:  { contains: q } },
+          { betreff: { contains: q } },
           { client:  clientNameFilter },
         ],
       },
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
     prisma.trainingsPlan.findMany({
       where: {
         OR: [
-          { name:   { contains: q, mode: 'insensitive' } },
+          { name:   { contains: q } },
           { client: clientNameFilter },
         ],
       },
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
     prisma.ernaehrungsPlan.findMany({
       where: {
         OR: [
-          { name:   { contains: q, mode: 'insensitive' } },
+          { name:   { contains: q } },
           { client: clientNameFilter },
         ],
       },

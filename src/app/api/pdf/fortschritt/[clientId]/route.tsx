@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db'
 import { Document, Page, Text, View, StyleSheet, renderToStream } from '@react-pdf/renderer'
 import { getLogoData } from '@/lib/logo'
 import { C, base, formatDate, nodeStreamToWeb, PdfHeader } from '@/lib/pdf'
-import { buildGewichtsDaten } from '@/lib/client-utils'
+import { buildGewichtsDaten, parseJsonArray } from '@/lib/client-utils'
 
 const s = StyleSheet.create({
   section:     { marginBottom: 20 },
@@ -125,11 +125,11 @@ function FortschrittPDF({ client, logoData }: { client: ClientData; logoData: st
               </View>
             )}
 
-            {latest.ziele.length > 0 && (
+            {parseJsonArray(latest.ziele).length > 0 && (
               <View style={{ marginTop: 8 }}>
                 <Text style={[s.rowLabel, { marginBottom: 4 }]}>Ziele</Text>
                 <View style={s.tagRow}>
-                  {latest.ziele.map(z => <Text key={z} style={s.tag}>{z}</Text>)}
+                  {parseJsonArray(latest.ziele).map(z => <Text key={z} style={s.tag}>{z}</Text>)}
                 </View>
               </View>
             )}

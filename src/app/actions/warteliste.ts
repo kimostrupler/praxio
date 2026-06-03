@@ -65,7 +65,7 @@ export async function transferWartelisteToClient(
 
   if (data.email?.trim()) {
     const taken = await prisma.client.findFirst({
-      where: { email: { equals: data.email.trim(), mode: 'insensitive' } },
+      where: { email: { equals: data.email.trim() } },
       select: { id: true },
     })
     if (taken) return { error: 'Diese E-Mail-Adresse wird bereits von einem anderen Klienten verwendet.' }
@@ -74,8 +74,8 @@ export async function transferWartelisteToClient(
   if (!force) {
     const existing = await prisma.client.findFirst({
       where: {
-        vorname:  { equals: data.vorname.trim(),  mode: 'insensitive' },
-        nachname: { equals: data.nachname.trim(), mode: 'insensitive' },
+        vorname:  { equals: data.vorname.trim() },
+        nachname: { equals: data.nachname.trim() },
       },
       select: { id: true, vorname: true, nachname: true },
     })

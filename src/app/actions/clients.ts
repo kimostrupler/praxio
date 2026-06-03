@@ -85,7 +85,7 @@ function b(v: string): boolean | undefined {
 
 function anamneseFields(data: AnamneseFormData) {
   return {
-    ziele: data.ziele,
+    ziele: JSON.stringify(data.ziele),
     zieleSonstiges: data.zieleSonstiges || undefined,
     motivation: data.motivation || undefined,
     zielWichtigkeit: data.zielWichtigkeit || undefined,
@@ -102,7 +102,7 @@ function anamneseFields(data: AnamneseFormData) {
     sonstigeMasse: data.sonstigeMasse || undefined,
     ernaehrungBewertung: data.ernaehrungBewertung || undefined,
     mahlzeitenProTag: i(data.mahlzeitenProTag),
-    essgewohnheiten: data.essgewohnheiten,
+    essgewohnheiten: JSON.stringify(data.essgewohnheiten),
     essgewohnheitenSonstiges: data.essgewohnheitenSonstiges || undefined,
     lebensmittelUnvertraeglichkeit: b(data.lebensmittelUnvertraeglichkeit),
     lebensmittelUnvertraeglichkeitWelche: data.lebensmittelUnvertraeglichkeitWelche || undefined,
@@ -145,7 +145,7 @@ export async function createClient(data: ClientFormData, force = false) {
   // Email must be unique across all clients
   if (data.email?.trim()) {
     const emailTaken = await prisma.client.findFirst({
-      where: { email: { equals: data.email.trim(), mode: 'insensitive' } },
+      where: { email: { equals: data.email.trim() } },
       select: { id: true },
     })
     if (emailTaken) {
@@ -156,8 +156,8 @@ export async function createClient(data: ClientFormData, force = false) {
   if (!force) {
     const existing = await prisma.client.findFirst({
       where: {
-        vorname: { equals: data.vorname.trim(), mode: 'insensitive' },
-        nachname: { equals: data.nachname.trim(), mode: 'insensitive' },
+        vorname: { equals: data.vorname.trim() },
+        nachname: { equals: data.nachname.trim() },
       },
       select: { id: true, vorname: true, nachname: true },
     })
@@ -242,7 +242,7 @@ export async function createAnamnese(clientId: string, data: AnamneseFormData) {
 
 export async function updateClientTags(clientId: string, tags: string[]) {
   if (!await getServerSession(authOptions)) return { error: 'Nicht angemeldet.' }
-  await prisma.client.update({ where: { id: clientId }, data: { tags } })
+  await prisma.client.update({ where: { id: clientId }, data: { tags: JSON.stringify(tags) } })
   revalidateTag('clients')
   revalidatePath(`/clients/${clientId}`)
   revalidatePath('/clients')
@@ -250,7 +250,7 @@ export async function updateClientTags(clientId: string, tags: string[]) {
 
 export async function updateClientStatus(
   clientId: string,
-  status: 'AKTIV' | 'PAUSIERT' | 'INAKTIV'
+  status: string
 ) {
   if (!await getServerSession(authOptions)) return { error: 'Nicht angemeldet.' }
   await prisma.client.update({ where: { id: clientId }, data: { status } })

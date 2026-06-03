@@ -142,7 +142,7 @@ export async function createPreset(
       data: {
         name: name.trim(),
         beschreibung: beschreibung || undefined,
-        ziele,
+        ziele: JSON.stringify(ziele),
         uebungen: {
           create: uebungen.map(u => ({
             uebungId: u.uebungId,
@@ -207,7 +207,7 @@ export async function updatePreset(
         data: {
           name: name.trim(),
           beschreibung: beschreibung || undefined,
-          ziele,
+          ziele: JSON.stringify(ziele),
           uebungen: { create: presetUebungData(uebungen) },
         },
       })
@@ -240,7 +240,7 @@ export async function updatePresetAndPlans(
         data: {
           name: name.trim(),
           beschreibung: beschreibung || undefined,
-          ziele,
+          ziele: JSON.stringify(ziele),
           uebungen: { create: presetUebungData(uebungen) },
         },
       })
@@ -296,7 +296,7 @@ export async function createUebung(data: UebungInput) {
         kategorie: data.kategorie,
         schwierigkeit: data.schwierigkeit || undefined,
         ausruestung: data.ausruestung || undefined,
-        ziele: data.ziele,
+        ziele: JSON.stringify(data.ziele),
         beschreibung: data.beschreibung || undefined,
         isCustom: true,
       },

@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db'
 import Link from 'next/link'
 import { fetchCalcomEvents, type CalEvent } from '@/lib/ical'
 import { avatarColor } from '@/lib/avatar'
+import { parseJsonArray } from '@/lib/client-utils'
 import { revalidatePath } from 'next/cache'
 import SyncButton from '@/components/SyncButton'
 import BookingClientButton from '@/components/BookingClientButton'
@@ -63,7 +64,7 @@ export default async function TerminePage(
   const allEventEmails = Array.from(new Set(events.map(e => e.attendeeEmail).filter(Boolean))) as string[]
   const clientByEmail: Record<string, {
     id: string; vorname: string; nachname: string; email: string | null; createdAt: Date
-    anamnesen: { aktuellesGewicht: number | null; ziele: string[] }[]
+    anamnesen: { aktuellesGewicht: number | null; ziele: string }[]
     notizen: { datum: Date; inhalt: string }[]
     trainingsplaene: { name: string }[]
     messungen: { datum: Date; gewicht: number | null }[]
@@ -71,7 +72,7 @@ export default async function TerminePage(
 
   if (allEventEmails.length > 0) {
     const matched = await prisma.client.findMany({
-      where: { email: { in: allEventEmails, mode: 'insensitive' } },
+      where: { email: { in: allEventEmails } },
       include: {
         anamnesen:       { orderBy: { datum: 'desc' }, take: 1, select: { aktuellesGewicht: true, ziele: true } },
         notizen:         { orderBy: { datum: 'desc' }, take: 1, select: { datum: true, inhalt: true } },
@@ -248,10 +249,10 @@ export default async function TerminePage(
                                 <p className="text-[#efefef] truncate">{client.notizen[0].inhalt}</p>
                               </div>
                             )}
-                            {client.anamnesen[0]?.ziele.length > 0 && (
+                            {parseJsonArray(client.anamnesen[0]?.ziele).length > 0 && (
                               <div>
                                 <p className="text-[10px] text-[#3a3a3a] uppercase tracking-wider mb-0.5">Ziele</p>
-                                <p className="text-[#efefef] truncate max-w-[140px]">{client.anamnesen[0].ziele.slice(0, 2).join(', ')}</p>
+                                <p className="text-[#efefef] truncate max-w-[140px]">{parseJsonArray(client.anamnesen[0]?.ziele).slice(0, 2).join(', ')}</p>
                               </div>
                             )}
                           </div>
