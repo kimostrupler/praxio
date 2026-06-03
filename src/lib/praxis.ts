@@ -1,0 +1,16 @@
+// All PRAXIS_* env vars in one place.
+// Values are read at module load — changing them via Settings requires a container restart.
+export const praxisName     = process.env.PRAXIS_NAME      ?? 'FitAllCoach'
+export const praxisSubtitle = process.env.PRAXIS_SUBTITLE  ?? 'by Joelle'
+export const praxisAdresse  = process.env.PRAXIS_ADRESSE   ?? ''
+export const praxisEmail    = process.env.PRAXIS_EMAIL_ADDR ?? ''
+export const praxisTel      = process.env.PRAXIS_TELEFON   ?? ''
+export const praxisStrasse  = process.env.PRAXIS_STRASSE   ?? ''
+export const praxisPlz      = process.env.PRAXIS_PLZ       ?? ''
+export const praxisOrt      = process.env.PRAXIS_ORT       ?? ''
+export const praxisWebsite  = process.env.PRAXIS_WEBSITE   ?? ''
+export const praxisMwstNr   = process.env.PRAXIS_MWST_NR   ?? ''
+export const praxisIban     = process.env.PRAXIS_IBAN      ?? ''
+export const praxisQrIban   = process.env.PRAXIS_QR_IBAN   ?? ''
+export const praxisBank     = process.env.PRAXIS_BANK      ?? ''
+export const praxisBic      = process.env.PRAXIS_BIC       ?? ''

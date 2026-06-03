@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: praxis
+      POSTGRES_USER: praxis
+      POSTGRES_PASSWORD: praxis_secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U praxis"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - praxis_next:/app/.next
+    depends_on:
+      db:
+        condition: service_healthy
+    # Production mode: pre-compiled, fast actions and page loads.
+    # After editing code: docker compose restart app  (~45s rebuild with cache)
+    # To switch back to dev (hot reload): replace the command below with:
+    #   command: sh -c "npx prisma db push && npx prisma db seed && npm run dev"
+    command: sh -c "npx prisma db push --accept-data-loss && npx prisma db seed && npm run build && npm run start"
+
+volumes:
+  postgres_data:
+  praxis_next:

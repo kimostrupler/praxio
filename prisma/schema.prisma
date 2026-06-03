@@ -1,0 +1,434 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Geschlecht {
+  WEIBLICH
+  MAENNLICH
+  DIVERS
+}
+
+enum ClientStatus {
+  AKTIV
+  PAUSIERT
+  INAKTIV
+}
+
+model Client {
+  id              String       @id @default(cuid())
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  vorname         String
+  nachname        String
+  adresse         String?
+  telefon         String?
+  email           String?
+  beruf           String?
+  geburtsdatum    DateTime?
+  geschlecht      Geschlecht?
+  status          ClientStatus @default(AKTIV)
+  naechsterTermin DateTime?
+  tags            String[]     @default([])
+  herkunft        String?
+
+  anamnesen         Anamnese[]
+  notizen           Notiz[]
+  trainingsplaene   TrainingsPlan[]
+  rechnungen        Rechnung[]
+  ernaehrungsplaene ErnaehrungsPlan[]
+  messungen         Messung[]
+  ziele             Ziel[]
+  aufgaben          Aufgabe[]
+
+  @@index([nachname])
+  @@index([status])
+  @@index([email])
+  @@index([createdAt])
+}
+
+
+// ── Rechnungen ───────────────────────────────────────────────────────────────
+
+enum RechnungStatus {
+  OFFEN
+  BEZAHLT
+  STORNIERT
+}
+
+model Rechnung {
+  id         String          @id @default(cuid())
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  nummer     String          @unique
+  datum      DateTime        @default(now())
+  faellig    DateTime?
+  clientId   String
+  client     Client          @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  status     RechnungStatus  @default(OFFEN)
+  bezahltAm  DateTime?
+  notizen          String?
+  mwst             Float           @default(0)
+  betreff          String?
+  anrede           String?
+  textBody         String?
+  emailVorlage     String?
+  zahlungszielTage Int?            @default(20)
+  positionen       RechnungsPosition[]
+
+  @@index([clientId])
+  @@index([status])
+  @@index([datum])
+  @@index([bezahltAm])
+}
+
+model RechnungsPosition {
+  id           String   @id @default(cuid())
+  rechnungId   String
+  rechnung     Rechnung @relation(fields: [rechnungId], references: [id], onDelete: Cascade)
+  beschreibung String
+  menge        Float    @default(1)
+  einzelpreis  Float
+  einheit      String?
+  reihenfolge  Int      @default(0)
+
+  @@index([rechnungId])
+}
+
+// ── Ernährung ─────────────────────────────────────────────────────────────────
+
+model ErnaehrungsVorlage {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  name         String
+  beschreibung String?
+
+  zeilen  ErnaehrungsVorlageZeile[]
+  plaene  ErnaehrungsPlan[]
+}
+
+model ErnaehrungsVorlageZeile {
+  id            String             @id @default(cuid())
+  vorlageId     String
+  vorlage       ErnaehrungsVorlage @relation(fields: [vorlageId], references: [id], onDelete: Cascade)
+  zeitpunkt     String
+  kalorien      Int?
+  protein       Int?
+  kohlenhydrate Int?
+  fett          Int?
+  notizen       String?
+  reihenfolge   Int                @default(0)
+
+  @@index([vorlageId, reihenfolge])
+}
+
+model ErnaehrungsPlan {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  datum     DateTime @default(now())
+  name      String
+  notizen   String?
+
+  clientId  String
+  client    Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  vorlageId String?
+  vorlage   ErnaehrungsVorlage? @relation(fields: [vorlageId], references: [id], onDelete: SetNull)
+
+  zeilen  ErnaehrungsPlanZeile[]
+
+  @@index([clientId, datum])
+  @@index([vorlageId])
+}
+
+model ErnaehrungsPlanZeile {
+  id            String          @id @default(cuid())
+  planId        String
+  plan          ErnaehrungsPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  zeitpunkt     String
+  kalorien      Int?
+  protein       Int?
+  kohlenhydrate Int?
+  fett          Int?
+  notizen       String?
+  reihenfolge   Int             @default(0)
+
+  @@index([planId, reihenfolge])
+}
+
+model Anamnese {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  datum     DateTime @default(now())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  ziele              String[]
+  zieleSonstiges     String?
+  motivation         String?
+  zielWichtigkeit    Int?
+  zielDatum          String?
+  groesse              Float?
+  aktuellesGewicht     Float?
+  gewichtVor3Monaten   Float?
+  gewichtVor1Jahr      Float?
+  wunschgewicht        Float?
+  gewichtVeraendert    Boolean?
+  gewichtVeraendertWie String?
+  koerperfett          Float?
+  taillenumfang        Float?
+  sonstigeMasse        String?
+  ernaehrungBewertung                  String?
+  mahlzeitenProTag                     Int?
+  essgewohnheiten                      String[]
+  essgewohnheitenSonstiges             String?
+  lebensmittelUnvertraeglichkeit       Boolean?
+  lebensmittelUnvertraeglichkeitWelche String?
+  wasserLiter                          Float?
+  kaffeeTassen                         Float?
+  alkoholPortionen                     Float?
+  softdrinksLiter                      Float?
+  ernaehrungstagebuch                  Boolean?
+  arbeitstag         String?
+  freizeitAktivitaet String?
+  sportProWoche      Int?
+  sportArt           String?
+  schritte           String?
+  raucher            Boolean?
+  raucherMenge       String?
+  schlafStunden        Float?
+  schlafQualitaet      String?
+  schlafProbleme       Boolean?
+  schlafProblemeWelche String?
+  stressLevel        Int?
+  stressfaktoren     String?
+  stressBewaeltigung String?
+  wohlbefinden       String?
+  erkrankungen        Boolean?
+  erkrankungenWelche  String?
+  medikamente         Boolean?
+  medikamenteWelche   String?
+  operationen         Boolean?
+  operationenWann     String?
+  sonstigeInfos       String?
+
+  @@index([clientId, datum])
+}
+
+model Notiz {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  datum     DateTime  @default(now())
+  clientId  String
+  client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  inhalt    String
+  kategorie String?
+  deletedAt DateTime?
+  messungId String?   @unique
+  messung   Messung?  @relation(fields: [messungId], references: [id], onDelete: SetNull)
+
+  // Composite covers the most common query: WHERE clientId=? AND deletedAt IS NULL ORDER BY datum
+  @@index([clientId, deletedAt, datum])
+}
+
+model Uebung {
+  id            String  @id @default(cuid())
+  name          String
+  kategorie     String
+  beschreibung  String?
+  ziele         String[]
+  schwierigkeit String?
+  ausruestung   String?
+  isCustom      Boolean @default(false)
+
+  planUebungen   PlanUebung[]
+  presetUebungen PresetUebung[]
+}
+
+model TrainingsPreset {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  name         String
+  beschreibung String?
+  ziele        String[]
+
+  uebungen        PresetUebung[]
+  trainingsplaene TrainingsPlan[]
+}
+
+model PresetUebung {
+  id             String          @id @default(cuid())
+  presetId       String
+  preset         TrainingsPreset @relation(fields: [presetId], references: [id], onDelete: Cascade)
+  uebungId       String
+  uebung         Uebung          @relation(fields: [uebungId], references: [id])
+  saetze         Int?
+  wiederholungen Int?
+  gewicht        Float?
+  dauer          Int?
+  pause          Int?
+  reihenfolge    Int             @default(0)
+
+  @@index([presetId, reihenfolge])
+}
+
+model TrainingsPlan {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  datum     DateTime @default(now())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name      String
+  notizen   String?
+  presetId  String?
+  preset    TrainingsPreset? @relation(fields: [presetId], references: [id], onDelete: SetNull)
+
+  uebungen PlanUebung[]
+
+  @@index([clientId, datum])
+  @@index([presetId])
+}
+
+model PlanUebung {
+  id             String        @id @default(cuid())
+  planId         String
+  plan           TrainingsPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  uebungId       String
+  uebung         Uebung        @relation(fields: [uebungId], references: [id])
+  saetze         Int?
+  wiederholungen Int?
+  gewicht        Float?
+  dauer          Int?
+  pause          Int?
+  reihenfolge    Int           @default(0)
+  notizen        String?
+
+  @@index([planId, reihenfolge])
+}
+
+// ── Messungen (schnelle Gewichtseinträge) ─────────────────────────────────────
+
+model Messung {
+  id          String   @id @default(cuid())
+  datum       DateTime @default(now())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  gewicht     Float?
+  koerperfett Float?
+  notiz       Notiz?
+
+  @@index([clientId, datum])
+}
+
+// ── Ziele ─────────────────────────────────────────────────────────────────────
+
+model Ziel {
+  id           String    @id @default(cuid())
+  createdAt    DateTime  @default(now())
+  clientId     String
+  client       Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  titel        String
+  beschreibung String?
+  zielwert     Float?
+  einheit      String?
+  zieldatum    DateTime?
+  erreicht     Boolean   @default(false)
+  erreichtAm   DateTime?
+
+  @@index([clientId])
+}
+
+// ── Aufgaben ──────────────────────────────────────────────────────────────────
+
+model Aufgabe {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  titel     String
+  notizen   String?
+  faellig   DateTime?
+  erledigt  Boolean   @default(false)
+  erledigtAm DateTime?
+  clientId  String?
+  client    Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  // Dashboard query: WHERE erledigt=false ORDER BY faellig ASC
+  @@index([erledigt, faellig])
+  @@index([clientId])
+}
+
+// ── Warteliste ────────────────────────────────────────────────────────────────
+
+model Warteliste {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  vorname    String
+  nachname   String
+  email      String?
+  telefon    String?
+  notizen    String?
+  prioritaet String   @default("MITTEL")
+  datum      DateTime @default(now())
+}
+
+// ── Benutzer (multi-user auth) ────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+model User {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole @default(STAFF)
+  active       Boolean  @default(true)
+  sessionVersion Int     @default(0)
+  theme        String?  // personal theme override (null = use global default)
+
+  @@index([email])
+}
+
+// ── App-weite Einstellungen (singleton) ───────────────────────────────────────
+
+model AppSettings {
+  id            String   @id @default("singleton")
+  theme         String   @default("system")
+  accentPreset  String   @default("amber")
+  praxisName    String   @default("FitAllCoach")
+  coachName     String   @default("by Joelle")
+  trainSaetze   Int      @default(3)
+  trainWdh      Int      @default(10)
+  trainPause    Int      @default(60)
+  clientDefault String   @default("AKTIV")
+  revenueGoal   Int      @default(0)
+  updatedAt     DateTime @updatedAt
+}
+
+// ── Audit Log ─────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String?
+  action    String
+  entityId  String?
+  details   String?
+
+  @@index([createdAt])
+  @@index([userId])
+}

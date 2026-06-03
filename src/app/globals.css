@@ -1,0 +1,464 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Color tokens ───────────────────────────────────────────────────────────
+   Light = default; .dark on <html> = dark mode.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  --page:       #eef0f3;
+  --card:       #ffffff;
+  --hover:      #f5f5f7;
+  --border-s:   #e8e8eb;
+  --border:     #dcdde0;
+  --border-m:   #c8c9cc;
+  --muted:      #8e8f94;
+  --faint:      #6f7076;
+  --mid:        #555760;
+  --sub:        #3a3c45;
+  --text:       #111218;
+  --accent:     #e89a3c;   /* default amber — overridden at runtime by applyAccentTokens() */
+  --accent-fg:  #160c00;
+  --accent-hv:  #d4872a;
+  --accent-dim: rgba(180,83,9,0.11);   /* tint for active bg — updated per preset+mode */
+  --accent-glow:rgba(180,83,9,0.20);   /* glow shadow — updated per preset+mode */
+  --input:      #f7f7f9;
+  --ph:         #a0a1a8;
+  --del-hv:     #fdf0f0;
+  --scroll:     #c8c9cc;
+  --brand:      #bba282;
+  --brand-dim:  #a08569;
+}
+
+.dark {
+  /* Surfaces — warmer, deeper blacks with slight chromatic shift */
+  --page:       #080a0c;   /* was #0a0a0a — slightly warmer deep black */
+  --card:       #0f1114;   /* was #141414 — warm dark surface */
+  --hover:      #181b1f;   /* was #1c1c1c — hover/active state */
+
+  /* Borders — glass-style translucent edges for depth */
+  --border-s:   rgba(255,255,255,0.07);   /* was #1c1c1c — ultra-subtle glass edge */
+  --border:     rgba(255,255,255,0.12);   /* was #2e2e2e — standard glass border */
+  --border-m:   rgba(255,255,255,0.20);   /* was #3a3a3a — prominent border */
+
+  /* Text hierarchy — slightly warmer white at the top */
+  --muted:      #5a5c62;
+  --faint:      #72757d;
+  --mid:        #8c8f98;
+  --sub:        #aaafb8;
+  --text:       #edecea;   /* was #efefef — slightly warm white */
+
+  /* Accent — amber-gold replaces white CTA */
+  --accent:     #e89a3c;   /* default amber — overridden at runtime by applyAccentTokens() */
+  --accent-fg:  #160c00;
+  --accent-hv:  #cf8426;
+  --accent-dim: rgba(232,154,60,0.14);  /* tint for active bg — updated per preset+mode */
+  --accent-glow:rgba(232,154,60,0.24);  /* glow shadow — updated per preset+mode */
+
+  /* Supporting */
+  --input:      #0b0d10;
+  --ph:         #464952;
+  --del-hv:     #1a0000;
+  --scroll:     #252830;
+  --brand:      #c8af8c;   /* brighter in dark for contrast */
+  --brand-dim:  #a89270;
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────────*/
+* { box-sizing: border-box; }
+
+/* ── Default transition: 300ms fluid ────────────────────────────────────────
+   All transition-* utilities default to 300ms ease-in-out for a deliberate,
+   smooth feel. Individual elements can override with duration-fast (120ms)
+   or duration-150 for snappier feedback on micro-interactions.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+body {
+  background-color: var(--page);
+  color: var(--text);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Focus ring ─────────────────────────────────────────────────────────────
+   :focus-visible only — keyboard users see the ring, mouse clicks do not.
+   :root prefix raises specificity above Tailwind's utilities.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+:root input:focus-visible,
+:root textarea:focus-visible,
+:root select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+/* ── Fluid transition defaults ──────────────────────────────────────────────*/
+:root .transition-colors  { transition-duration: 300ms; transition-timing-function: ease-in-out; }
+:root .transition-all     { transition-duration: 300ms; transition-timing-function: ease-in-out; }
+:root .transition-opacity { transition-duration: 300ms; transition-timing-function: ease-in-out; }
+:root .transition-transform { transition-duration: 300ms; transition-timing-function: ease-in-out; }
+
+/* ── Monospace for numeric precision ────────────────────────────────────────
+   Elements with tabular-nums automatically get the mono font — stats, prices,
+   times, IDs — giving the "technical & precise" aesthetic on all data points.
+   ─────────────────────────────────────────────────────────────────────────── */
+.tabular-nums {
+  font-family: var(--font-mono), 'JetBrains Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Date inputs ────────────────────────────────────────────────────────────*/
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] { color-scheme: dark; }
+
+:root:not(.dark) input[type="date"],
+:root:not(.dark) input[type="time"],
+:root:not(.dark) input[type="datetime-local"] { color-scheme: light; }
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────────*/
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scroll); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-m); }
+
+.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
+/* ── Tailwind arbitrary-class overrides ─────────────────────────────────────
+   Maps hardcoded dark hex values to CSS variables so both modes theme
+   correctly. :root prefix = (0,2,0) specificity — beats Tailwind's (0,1,1).
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Backgrounds */
+:root .bg-\[\#0a0a0a\]   { background-color: var(--page);   }
+:root .bg-\[\#0f0f0f\]   { background-color: var(--page);   }
+:root .bg-\[\#1a1a1a\]   { background-color: var(--hover);  }
+:root .bg-\[\#141414\]   { background-color: var(--card);   }
+:root .bg-\[\#1c1c1c\]   { background-color: var(--hover);  }
+:root .bg-\[\#2e2e2e\]   { background-color: var(--border); }
+
+/* Opacity variants */
+:root .bg-\[\#0a0a0a\]\/95 {
+  background-color: color-mix(in srgb, var(--page) 95%, transparent);
+}
+
+/* Hover / active */
+:root .hover\:bg-\[\#1c1c1c\]:hover   { background-color: var(--hover);     }
+:root .hover\:bg-\[\#1a1a1a\]:hover   { background-color: var(--hover);     }
+:root .hover\:bg-\[\#242424\]:hover   { background-color: var(--hover);     }
+:root .hover\:bg-\[\#2e2e2e\]:hover   { background-color: var(--border);    }
+:root .hover\:bg-\[\#e8e8e8\]:hover   { background-color: var(--accent-hv); }
+:root .hover\:bg-\[\#1c0000\]:hover   { background-color: var(--del-hv);    }
+:root .hover\:bg-\[\#181b1f\]:hover   { background-color: var(--hover);     }
+:root .active\:bg-\[\#1c1c1c\]:active { background-color: var(--hover);     }
+:root .active\:bg-\[\#222222\]:active { background-color: var(--hover);     }
+
+/* Borders */
+:root .border-\[\#1c1c1c\] { border-color: var(--border-s); }
+:root .border-\[\#2e2e2e\] { border-color: var(--border);   }
+:root .border-\[\#3a3a3a\] { border-color: var(--border-m); }
+:root .border-\[\#555555\] { border-color: var(--mid);      }
+
+:root .hover\:border-\[\#2e2e2e\]:hover { border-color: var(--border);   }
+:root .hover\:border-\[\#3a3a3a\]:hover { border-color: var(--border-m); }
+:root .hover\:border-\[\#444444\]:hover { border-color: var(--faint);    }
+
+:root .group:hover .group-hover\:border-\[\#2e2e2e\] { border-color: var(--border);   }
+:root .group:hover .group-hover\:border-\[\#3a3a3a\] { border-color: var(--border-m); }
+
+/* Focus */
+:root .focus\:border-\[\#555555\]:focus { border-color: var(--mid); }
+
+/* Dividers */
+:root .divide-\[\#1c1c1c\] > :not([hidden]) ~ :not([hidden]) { border-color: var(--border-s); }
+
+/* Text */
+:root .text-\[\#efefef\] { color: var(--text);     }
+:root .text-\[\#666666\] { color: var(--sub);      }
+:root .text-\[\#555555\] { color: var(--mid);      }
+:root .text-\[\#444444\] { color: var(--faint);    }
+:root .text-\[\#3a3a3a\] { color: var(--muted);    }
+:root .text-\[\#2e2e2e\] { color: var(--muted);    }
+:root .text-\[\#888888\] { color: var(--faint);    }
+:root .text-\[\#bba282\] { color: var(--brand);    }
+/* text-accent semantic class — resolves to amber in dark, slate in light */
+:root .text-accent      { color: var(--accent);   }
+
+:root .hover\:text-\[\#efefef\]:hover  { color: var(--text);  }
+:root .hover\:text-\[\#666666\]:hover  { color: var(--sub);   }
+:root .hover\:text-\[\#888888\]:hover  { color: var(--faint); }
+:root .hover\:text-\[\#cccccc\]:hover  { color: var(--sub);   }
+
+:root .group:hover .group-hover\:text-\[\#444444\] { color: var(--faint); }
+:root .group:hover .group-hover\:text-\[\#666666\] { color: var(--sub);   }
+
+/* Placeholder */
+:root .placeholder\:\[\#3a3a3a\]::placeholder { color: var(--ph); }
+
+/* ── Accent: bg-white / text-black flip ─────────────────────────────────────
+   Dark mode: amber-gold button.  Light mode: dark-slate button.
+   This single mapping transforms every bg-white text-black button in the app.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root .bg-white   { background-color: var(--accent);    }
+:root .text-black { color:            var(--accent-fg); }
+
+:root .text-black\/50 {
+  color: color-mix(in srgb, var(--accent-fg) 50%, transparent);
+}
+
+/* ── text-white / hover:text-white ─────────────────────────────────────────
+   Dark mode: near-white text.  Light mode: primary dark text.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root .text-white                           { color: var(--text); }
+:root .hover\:text-white:hover              { color: var(--text); }
+:root .group:hover .group-hover\:text-white { color: var(--text); }
+
+/* White opacity variants — /5 and /10 are standard Tailwind; /[0.05] etc. are
+   arbitrary-notation variants and need their own override rules. */
+:root .bg-white\/5              { background-color: color-mix(in srgb, var(--text)  5%, transparent); }
+:root .bg-white\/10             { background-color: color-mix(in srgb, var(--text) 10%, transparent); }
+/* Arbitrary-notation variants used in SidebarNav hover/toggle states */
+:root .bg-white\/\[0\.05\]                  { background-color: color-mix(in srgb, var(--text)  5%, transparent); }
+:root .hover\:bg-white\/\[0\.05\]:hover     { background-color: color-mix(in srgb, var(--text)  5%, transparent); }
+:root .hover\:bg-white\/\[0\.04\]:hover     { background-color: color-mix(in srgb, var(--text)  4%, transparent); }
+:root .text-white\/50 { color: color-mix(in srgb, var(--text) 50%, transparent); }
+:root .text-white\/60 { color: color-mix(in srgb, var(--text) 60%, transparent); }
+:root .border-white\/10 { border-color: color-mix(in srgb, var(--text) 10%, transparent); }
+:root .border-white\/20 { border-color: color-mix(in srgb, var(--text) 20%, transparent); }
+
+/* ── Active nav state — uses dynamic --accent-dim set by applyAccentTokens() ─
+   bg-white/10 is used for active sidebar items. Both modes use the same
+   CSS var; applyAccentTokens() sets the appropriate value per mode+preset.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root:is(.dark) .bg-white\/10 {
+  background-color: var(--accent-dim, rgba(232,154,60,0.14));
+}
+
+/* ── Dark-mode glass effects ────────────────────────────────────────────────
+   Applied only in dark mode (specificity: 0,3,0 — beats other overrides).
+   Cards get layered shadows creating depth and the glass illusion.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Card glass — every dark-mode card */
+:root:is(.dark) .bg-\[\#141414\] {
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.07),     /* edge highlight */
+    0 4px 24px rgba(0,0,0,0.55),           /* depth shadow  */
+    0 1px 4px  rgba(0,0,0,0.35),           /* close shadow  */
+    inset 0 1px 0 rgba(255,255,255,0.045); /* top highlight */
+}
+
+/* Card hover lift */
+:root:is(.dark) .hover\:bg-\[\#1c1c1c\]:hover {
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.10),
+    0 8px 32px rgba(0,0,0,0.65),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* Sidebar — real backdrop blur for depth layering */
+:root:is(.dark) .bg-\[\#0a0a0a\].fixed {
+  background: rgba(8, 10, 12, 0.88);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  /* Override the right-border to glass style */
+  border-right-color: rgba(255,255,255,0.07);
+}
+
+/* Sitzungsansicht sticky header glass */
+:root:is(.dark) .bg-\[\#0a0a0a\]\/95 {
+  background: rgba(8,10,12,0.88);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+/* ── Light-mode refinements ─────────────────────────────────────────────────
+   Glass treatment adapted for light surfaces.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Cards — layered shadows matching the dark-mode glass depth vocabulary */
+:root:not(.dark) .bg-\[\#141414\] {
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.06),          /* edge definition */
+    0 2px 8px  rgba(0,0,0,0.07),          /* depth */
+    0 1px 3px  rgba(0,0,0,0.05),          /* close shadow */
+    inset 0 1px 0 rgba(255,255,255,1);    /* top glass highlight */
+}
+
+/* Card hover lift in light mode */
+:root:not(.dark) .hover\:bg-\[\#1c1c1c\]:hover {
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.08),
+    0 4px 12px rgba(0,0,0,0.09),
+    inset 0 1px 0 rgba(255,255,255,1);
+}
+
+/* Sidebar — frosted glass panel floating over page content */
+:root:not(.dark) .bg-\[\#0a0a0a\].fixed {
+  background: rgba(241,242,246,0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 1px 0 0 0 rgba(0,0,0,0.08), 0 0 40px rgba(0,0,0,0.04);
+}
+
+/* Active nav tint in light mode — same CSS var, applyAccentTokens() sets the right value */
+:root:not(.dark) .bg-white\/10 {
+  background-color: var(--accent-dim, rgba(180,83,9,0.11));
+}
+
+/* Dashboard KPI hover + alert hover — light-mode equivalents */
+:root:not(.dark) .hover\:bg-red-950\/50:hover    { background-color: #fee2e2; }
+:root:not(.dark) .hover\:bg-orange-950\/40:hover { background-color: #fed7aa; }
+
+/* Amber badge (ADMIN role tag) */
+:root:not(.dark) .bg-amber-950\/50     { background-color: #fff8ed; }
+:root:not(.dark) .border-amber-900\/30 { border-color:      #fcd34d; }
+
+/* Status badge light-mode equivalents */
+:root:not(.dark) .bg-emerald-950\/40     { background-color: #ecfdf5; }
+:root:not(.dark) .border-emerald-900\/40 { border-color: #a7f3d0; }
+:root:not(.dark) .bg-orange-950\/40      { background-color: #fff7ed; }
+:root:not(.dark) .border-orange-900\/40  { border-color: #fed7aa; }
+:root:not(.dark) .bg-red-950\/40         { background-color: #fef2f2; }
+:root:not(.dark) .border-red-900\/40     { border-color: #fecaca; }
+:root:not(.dark) .bg-red-950\/20         { background-color: #fff5f5; }
+:root:not(.dark) .border-red-900\/30     { border-color: #fecaca; }
+:root:not(.dark) .bg-red-950\/30         { background-color: #fef2f2; }
+:root:not(.dark) .bg-orange-950\/30      { background-color: #fffbeb; }
+:root:not(.dark) .border-orange-900\/30  { border-color: #fde68a; }
+:root:not(.dark) .bg-orange-950\/20      { background-color: #fffbeb; }
+:root:not(.dark) .border-orange-900\/20  { border-color: #fde68a; }
+:root:not(.dark) .bg-emerald-950\/10     { background-color: #f0fdf4; }
+:root:not(.dark) .border-emerald-900\/20 { border-color: #bbf7d0; }
+
+/* Shift saturated 400-grade colors to readable equivalents on light surfaces */
+:root:not(.dark) .text-emerald-400 { color: #059669; }
+:root:not(.dark) .text-orange-400  { color: #d97706; }
+:root:not(.dark) .text-red-400     { color: #dc2626; }
+:root:not(.dark) .text-blue-400    { color: #2563eb; }
+:root:not(.dark) .text-purple-400  { color: #7c3aed; }
+:root:not(.dark) .text-yellow-400  { color: #b45309; }
+:root:not(.dark) .text-sky-400     { color: #0284c7; }
+:root:not(.dark) .text-cyan-400    { color: #0891b2; }
+:root:not(.dark) .text-amber-400   { color: #b45309; }
+:root:not(.dark) .text-indigo-400  { color: #4338ca; }
+:root:not(.dark) .text-emerald-500 { color: #047857; }
+:root:not(.dark) .text-orange-500  { color: #c2410c; }
+:root:not(.dark) .text-red-500     { color: #b91c1c; }
+/* Light-text variants that are invisible on white */
+:root:not(.dark) .text-orange-300          { color: #ea580c; }
+:root:not(.dark) .hover\:text-blue-300:hover { color: #1d4ed8; }
+
+/* ── Login page themed elements ─────────────────────────────────────────────
+   CSS classes rather than inline styles so dark/light modes are respected.
+   .dark is set on <html> by the inline script in layout.tsx before hydration.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Background grid — white lines on dark, dark lines on light */
+.login-grid {
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 80%);
+  position: absolute; inset: 0; pointer-events: none;
+}
+.dark .login-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+}
+:root:not(.dark) .login-grid {
+  background-image:
+    linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+  opacity: 0.55;
+}
+
+/* Glass card */
+.login-card {
+  border-radius: 1rem;
+  padding: 2rem;
+}
+.dark .login-card {
+  background: rgba(15,17,20,0.90);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.09),
+    0 24px 64px rgba(0,0,0,0.65),
+    0 4px 16px rgba(0,0,0,0.40),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+:root:not(.dark) .login-card {
+  background: rgba(255,255,255,0.90);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.08),
+    0 24px 64px rgba(0,0,0,0.10),
+    0 4px 16px rgba(0,0,0,0.06),
+    inset 0 1px 0 rgba(255,255,255,1);
+}
+
+/* Input fields — glass-style in both modes */
+.login-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text);
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+  outline: none;
+}
+.dark .login-input {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.30);
+}
+.dark .login-input::placeholder { color: var(--ph); }
+.dark .login-input:focus {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 0 3px var(--accent-dim), inset 0 1px 2px rgba(0,0,0,0.30);
+}
+:root:not(.dark) .login-input {
+  background: rgba(0,0,0,0.03);
+  border: 1px solid rgba(0,0,0,0.12);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+}
+:root:not(.dark) .login-input::placeholder { color: var(--ph); }
+:root:not(.dark) .login-input:focus {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: 0 0 0 3px var(--accent-dim), inset 0 1px 2px rgba(0,0,0,0.04);
+}
+
+/* ── Animations ─────────────────────────────────────────────────────────────*/
+
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none;             }
+  /* 'none' not 'translateY(0)' — a non-none transform creates a new CSS containing
+     block for position:fixed children (modal backdrop clipping bug). */
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+
+/* Fluid timing — 300ms matches the overall motion direction */
+.animate-page-enter { animation: page-enter 0.30s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.animate-fade-in    { animation: fade-in    0.25s ease-out both; }
+.animate-scale-in   { animation: scale-in  0.25s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+
