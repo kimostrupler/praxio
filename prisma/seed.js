@@ -115,7 +115,7 @@ async function main() {
   if (uebungCount > 0) {
     console.log(`Exercise catalog already seeded (${uebungCount} exercises), skipping...`)
   } else {
-    await prisma.uebung.createMany({ data: uebungen })
+    await prisma.uebung.createMany({ data: uebungen.map(u => ({ ...u, ziele: JSON.stringify(u.ziele) })) })
     console.log(`Seeded ${uebungen.length} exercises.`)
   }
 
