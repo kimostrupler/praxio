@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { Document, Page, Text, View, StyleSheet, renderToStream } from '@react-pdf/renderer'
 import { getLogoData } from '@/lib/logo'
 import { C, base, formatDate, nodeStreamToWeb, PdfHeader } from '@/lib/pdf'
+import { getPraxisConfig, type PraxisConfig } from '@/lib/praxis'
 
 const s = StyleSheet.create({
   planTitle:   { fontSize: 16, fontFamily: 'Helvetica-Bold', color: C.black, marginBottom: 3 },
@@ -42,12 +43,12 @@ async function fetchData(clientId: string) {
 
 type ClientData = NonNullable<Awaited<ReturnType<typeof fetchData>>>
 
-function ErnaehrungsplaenePDF({ client, logoData }: { client: ClientData; logoData: string | null }) {
+function ErnaehrungsplaenePDF({ client, logoData, praxis }: { client: ClientData; logoData: string | null; praxis: PraxisConfig }) {
   return (
     <Document title={`Ernährungspläne – ${client.vorname} ${client.nachname}`}>
       <Page size="A4" style={base.page}>
         <View style={base.topStrip} fixed />
-        <PdfHeader title="Ernährungspläne" date={formatDate(new Date())} logoData={logoData} />
+        <PdfHeader title="Ernährungspläne" date={formatDate(new Date())} logoData={logoData} praxisName={praxis.name} praxisSubtitle={praxis.subtitle} />
         <View style={base.dividerBold} />
 
         <Text style={base.clientName}>{client.vorname} {client.nachname}</Text>
@@ -126,7 +127,8 @@ export async function GET(_: Request, props: { params: Promise<{ clientId: strin
   if (!data) return new Response('Not found', { status: 404 })
 
   const logoData = getLogoData()
-  const stream = await renderToStream(<ErnaehrungsplaenePDF client={data} logoData={logoData} />)
+  const praxis = await getPraxisConfig()
+  const stream = await renderToStream(<ErnaehrungsplaenePDF client={data} logoData={logoData} praxis={praxis} />)
   const name = `Ernaehrungsplaene_${data.nachname}_${data.vorname.replace(/\s/g, '_')}.pdf`
   return new Response(nodeStreamToWeb(stream), {
     headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${name}"` },

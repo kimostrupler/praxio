@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { Document, Page, Text, View, StyleSheet, renderToStream } from '@react-pdf/renderer'
 import { getLogoData } from '@/lib/logo'
 import { C, base, formatDate, nodeStreamToWeb, PdfHeader } from '@/lib/pdf'
+import { getPraxisConfig, type PraxisConfig } from '@/lib/praxis'
 
 const s = StyleSheet.create({
   hero:        { marginBottom: 24 },
@@ -39,7 +40,7 @@ async function fetchData(planId: string) {
 
 type PlanData = NonNullable<Awaited<ReturnType<typeof fetchData>>>
 
-function ErnaehrungPDF({ plan, logoData }: { plan: PlanData; logoData: string | null }) {
+function ErnaehrungPDF({ plan, logoData, praxis }: { plan: PlanData; logoData: string | null; praxis: PraxisConfig }) {
   const totalKcal = plan.zeilen.reduce((acc, z) => acc + (z.kalorien ?? 0), 0)
   const totalProt = plan.zeilen.reduce((acc, z) => acc + (z.protein ?? 0), 0)
   const totalKH   = plan.zeilen.reduce((acc, z) => acc + (z.kohlenhydrate ?? 0), 0)
@@ -49,7 +50,7 @@ function ErnaehrungPDF({ plan, logoData }: { plan: PlanData; logoData: string | 
     <Document title={plan.name} subject={`Ernährungsplan – ${plan.client.vorname} ${plan.client.nachname}`}>
       <Page size="A4" style={base.page}>
         <View style={base.topStrip} fixed />
-        <PdfHeader title="Ernährungsplan" date={formatDate(plan.datum)} logoData={logoData} large />
+        <PdfHeader title="Ernährungsplan" date={formatDate(plan.datum)} logoData={logoData} praxisName={praxis.name} praxisSubtitle={praxis.subtitle} large />
         <View style={base.dividerBoldLg} />
 
         <View style={s.hero}>
@@ -113,7 +114,8 @@ export async function GET(_: Request, props: { params: Promise<{ planId: string 
   if (!data) return new Response('Not found', { status: 404 })
 
   const logoData = getLogoData()
-  const stream = await renderToStream(<ErnaehrungPDF plan={data} logoData={logoData} />)
+  const praxis = await getPraxisConfig()
+  const stream = await renderToStream(<ErnaehrungPDF plan={data} logoData={logoData} praxis={praxis} />)
   const filename = `Ernaehrungsplan_${data.client.nachname}_${data.name.replace(/[^a-zA-Z0-9äöüÄÖÜß]/g, '_')}.pdf`
   return new Response(nodeStreamToWeb(stream), {
     headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${filename}"` },

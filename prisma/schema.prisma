@@ -392,6 +392,26 @@ model AppSettings {
   trainPause    Int      @default(60)
   clientDefault String   @default("AKTIV")
   revenueGoal   Int      @default(0)
+
+  // Praxis contact / billing details (formerly PRAXIS_* env vars)
+  praxisAdresse  String @default("")
+  praxisStrasse  String @default("")
+  praxisPlz      String @default("")
+  praxisOrt      String @default("")
+  praxisTelefon  String @default("")
+  praxisEmail    String @default("")
+  praxisWebsite  String @default("")
+  praxisMwstNr   String @default("")
+  praxisIban     String @default("")
+  praxisQrIban   String @default("")
+  praxisBank     String @default("")
+  praxisBic      String @default("")
+
+  // Rechnung defaults (formerly RECHNUNG_*_DEFAULT env vars)
+  rechnungMwst    String @default("0")
+  rechnungBetreff String @default("")
+  rechnungText    String @default("")
+
   updatedAt     DateTime @updatedAt
 }
 

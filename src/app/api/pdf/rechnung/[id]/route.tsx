@@ -5,7 +5,7 @@ import { NextRequest } from 'next/server'
 import { Document, Page, Text, View, StyleSheet, Image, Svg, Rect, renderToStream } from '@react-pdf/renderer'
 import { getLogoData } from '@/lib/logo'
 import { nodeStreamToWeb } from '@/lib/pdf'
-import { praxisName, praxisSubtitle, praxisAdresse, praxisEmail, praxisTel, praxisStrasse, praxisPlz, praxisOrt, praxisWebsite, praxisMwstNr, praxisIban, praxisQrIban, praxisBank, praxisBic } from '@/lib/praxis'
+import { getPraxisConfig } from '@/lib/praxis'
 import QRCode from 'qrcode'
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -152,7 +152,7 @@ async function fetchData(id: string) {
 type Data = NonNullable<Awaited<ReturnType<typeof fetchData>>>
 
 // ── Invoice PDF component ────────────────────────────────────────────────────
-function InvoicePage({ r, praxis }: { r: Data; praxis: ReturnType<typeof readPraxis> }) {
+function InvoicePage({ r, praxis }: { r: Data; praxis: Awaited<ReturnType<typeof readPraxis>> }) {
   const netto   = r.positionen.reduce((s, p) => s + p.menge * p.einzelpreis, 0)
   const mwstAmt = netto * r.mwst / 100
   const brutto  = netto + mwstAmt
@@ -285,7 +285,7 @@ function InvoicePage({ r, praxis }: { r: Data; praxis: ReturnType<typeof readPra
 
 // ── QR Bill page component ───────────────────────────────────────────────────
 function QrBillPage({ r, praxis, qrBase64, brutto }: {
-  r: Data; praxis: ReturnType<typeof readPraxis>; qrBase64: string; brutto: number
+  r: Data; praxis: Awaited<ReturnType<typeof readPraxis>>; qrBase64: string; brutto: number
 }) {
   const activeIban  = (praxis.qrIban || praxis.iban).replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim()
   const usingQrIban = !!praxis.qrIban
@@ -391,14 +391,9 @@ function QrBillPage({ r, praxis, qrBase64, brutto }: {
   )
 }
 
-function readPraxis() {
-  return {
-    name: praxisName, subtitle: praxisSubtitle, logoData: getLogoData(),
-    adresse: praxisAdresse, strasse: praxisStrasse, plz: praxisPlz, ort: praxisOrt,
-    telefon: praxisTel, email: praxisEmail, website: praxisWebsite,
-    mwstNr: praxisMwstNr, iban: praxisIban, qrIban: praxisQrIban,
-    bank: praxisBank, bic: praxisBic,
-  }
+async function readPraxis() {
+  const config = await getPraxisConfig()
+  return { ...config, logoData: getLogoData() }
 }
 
 // ── Route handler ─────────────────────────────────────────────────────────────
@@ -410,7 +405,7 @@ export async function GET(_req: NextRequest, props: { params: Promise<{ id: stri
   const data = await fetchData(params.id)
   if (!data) return new Response('Not found', { status: 404 })
 
-  const praxis  = readPraxis()
+  const praxis  = await readPraxis()
   const netto   = data.positionen.reduce((s, p) => s + p.menge * p.einzelpreis, 0)
   const brutto  = netto * (1 + data.mwst / 100)
 

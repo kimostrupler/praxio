@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { avatarColor } from '@/lib/avatar'
 import { CHF, rBrutto, RECHNUNG_STATUS_LABEL, RECHNUNG_STATUS_STYLE } from '@/lib/formatting'
 import { buildGewichtsDaten, parseJsonArray } from '@/lib/client-utils'
-import { praxisName } from '@/lib/praxis'
+import { getPraxisConfig } from '@/lib/praxis'
 import ZieleBlock from '@/components/ZieleBlock'
 import CollapsibleSection from '@/components/CollapsibleSection'
 import MessungForm from '@/components/MessungForm'
@@ -80,7 +80,7 @@ export default async function ClientDetailPage(
   const params = await props.params;
   const tab = searchParams.tab ?? 'uebersicht'
 
-  const [client, clientRechnungen, messungen] = await Promise.all([
+  const [client, clientRechnungen, messungen, praxis] = await Promise.all([
     prisma.client.findUnique({
       where: { id: params.id },
       include: {
@@ -114,6 +114,7 @@ export default async function ClientDetailPage(
       where: { clientId: params.id },
       orderBy: { datum: 'asc' },
     }),
+    getPraxisConfig(),
   ])
   if (!client) notFound()
 
@@ -306,7 +307,7 @@ export default async function ClientDetailPage(
               clientId={params.id}
               clientEmail={client.email ?? null}
               clientVorname={client.vorname}
-              praxisName={praxisName}
+              praxisName={praxis.name}
               hasPlaene={client.trainingsplaene.length > 0}
               hasErnaehrung={client.ernaehrungsplaene.length > 0}
             />

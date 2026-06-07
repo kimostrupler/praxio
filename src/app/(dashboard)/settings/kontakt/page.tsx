@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import PraxisKontaktForm from '@/components/PraxisKontaktForm'
+import { getPraxisConfig } from '@/lib/praxis'
 
-export default function KontaktSettingsPage() {
+export default async function KontaktSettingsPage() {
+  const praxis = await getPraxisConfig()
+
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-3xl">
       <div className="mb-6">
@@ -13,21 +16,21 @@ export default function KontaktSettingsPage() {
         <p className="text-xs text-[#444444] mt-0.5">Kontaktdaten, Bankverbindung und QR-Rechnung</p>
       </div>
       <PraxisKontaktForm
-        initialAdresse={process.env.PRAXIS_ADRESSE              ?? ''}
-        initialStrasse={process.env.PRAXIS_STRASSE              ?? ''}
-        initialPlz={process.env.PRAXIS_PLZ                      ?? ''}
-        initialOrt={process.env.PRAXIS_ORT                      ?? ''}
-        initialTelefon={process.env.PRAXIS_TELEFON              ?? ''}
-        initialEmail={process.env.PRAXIS_EMAIL_ADDR             ?? ''}
-        initialWebsite={process.env.PRAXIS_WEBSITE              ?? ''}
-        initialMwstNr={process.env.PRAXIS_MWST_NR               ?? ''}
-        initialIban={process.env.PRAXIS_IBAN                    ?? ''}
-        initialQrIban={process.env.PRAXIS_QR_IBAN               ?? ''}
-        initialBank={process.env.PRAXIS_BANK                    ?? ''}
-        initialBic={process.env.PRAXIS_BIC                      ?? ''}
-        initialRechnungMwst={process.env.RECHNUNG_MWST_DEFAULT     ?? '0'}
-        initialRechnungBetreff={process.env.RECHNUNG_BETREFF_DEFAULT ?? ''}
-        initialRechnungText={process.env.RECHNUNG_TEXT_DEFAULT     ?? ''}
+        initialAdresse={praxis.adresse}
+        initialStrasse={praxis.strasse}
+        initialPlz={praxis.plz}
+        initialOrt={praxis.ort}
+        initialTelefon={praxis.telefon}
+        initialEmail={praxis.email}
+        initialWebsite={praxis.website}
+        initialMwstNr={praxis.mwstNr}
+        initialIban={praxis.iban}
+        initialQrIban={praxis.qrIban}
+        initialBank={praxis.bank}
+        initialBic={praxis.bic}
+        initialRechnungMwst={praxis.rechnungMwst}
+        initialRechnungBetreff={praxis.rechnungBetreff}
+        initialRechnungText={praxis.rechnungText}
       />
     </div>
   )

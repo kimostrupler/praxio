@@ -3,7 +3,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { Document, Page, Text, View, StyleSheet, renderToStream } from '@react-pdf/renderer'
 import { getLogoData } from '@/lib/logo'
-import { C, base, formatDate, nodeStreamToWeb, praxisName, PdfHeader } from '@/lib/pdf'
+import { C, base, formatDate, nodeStreamToWeb, PdfHeader } from '@/lib/pdf'
+import { getPraxisConfig, type PraxisConfig } from '@/lib/praxis'
 import { parseJsonArray } from '@/lib/client-utils'
 
 const s = StyleSheet.create({
@@ -63,7 +64,7 @@ async function fetchData(id: string) {
 
 type AnamneseData = NonNullable<Awaited<ReturnType<typeof fetchData>>>
 
-function AnamnesesPDF({ a, logoData }: { a: AnamneseData; logoData: string | null }) {
+function AnamnesesPDF({ a, logoData, praxis }: { a: AnamneseData; logoData: string | null; praxis: PraxisConfig }) {
   const client = a.client
   const bmiVal = a.aktuellesGewicht && a.groesse
     ? (a.aktuellesGewicht / Math.pow(a.groesse / 100, 2)).toFixed(1)
@@ -72,10 +73,10 @@ function AnamnesesPDF({ a, logoData }: { a: AnamneseData; logoData: string | nul
   const aEssgewohnheiten = parseJsonArray(a.essgewohnheiten)
 
   return (
-    <Document title={`Anamnesebogen – ${client.vorname} ${client.nachname}`} author={praxisName}>
+    <Document title={`Anamnesebogen – ${client.vorname} ${client.nachname}`} author={praxis.name}>
       <Page size="A4" style={base.page}>
         <View style={base.topStrip} fixed />
-        <PdfHeader title="Anamnesebogen" date={formatDate(a.datum)} logoData={logoData} />
+        <PdfHeader title="Anamnesebogen" date={formatDate(a.datum)} logoData={logoData} praxisName={praxis.name} praxisSubtitle={praxis.subtitle} />
         <View style={base.dividerBold} />
 
         <View style={s.clientRow}>
@@ -130,14 +131,14 @@ function AnamnesesPDF({ a, logoData }: { a: AnamneseData; logoData: string | nul
         </Sec>
 
         <View style={base.footer} fixed>
-          <Text style={base.footerText}>{praxisName} · Anamnesebogen · {client.vorname} {client.nachname}</Text>
+          <Text style={base.footerText}>{praxis.name} · Anamnesebogen · {client.vorname} {client.nachname}</Text>
           <Text style={base.footerText} render={({ pageNumber, totalPages }) => `Seite ${pageNumber} von ${totalPages}`} />
         </View>
       </Page>
 
       <Page size="A4" style={base.page}>
         <View style={base.topStrip} fixed />
-        <PdfHeader title="Anamnesebogen" date={`${client.vorname} ${client.nachname} · ${formatDate(a.datum)}`} logoData={logoData} />
+        <PdfHeader title="Anamnesebogen" date={`${client.vorname} ${client.nachname} · ${formatDate(a.datum)}`} logoData={logoData} praxisName={praxis.name} praxisSubtitle={praxis.subtitle} />
         <View style={base.dividerBold} />
 
         <Sec title="Alltag & Lifestyle">
@@ -175,7 +176,7 @@ function AnamnesesPDF({ a, logoData }: { a: AnamneseData; logoData: string | nul
         </Sec>
 
         <View style={base.footer} fixed>
-          <Text style={base.footerText}>{praxisName} · Anamnesebogen · {client.vorname} {client.nachname}</Text>
+          <Text style={base.footerText}>{praxis.name} · Anamnesebogen · {client.vorname} {client.nachname}</Text>
           <Text style={base.footerText} render={({ pageNumber, totalPages }) => `Seite ${pageNumber} von ${totalPages}`} />
         </View>
       </Page>
@@ -192,7 +193,8 @@ export async function GET(_: Request, props: { params: Promise<{ id: string }> }
   if (!data) return new Response('Not found', { status: 404 })
 
   const logoData = getLogoData()
-  const stream = await renderToStream(<AnamnesesPDF a={data} logoData={logoData} />)
+  const praxis = await getPraxisConfig()
+  const stream = await renderToStream(<AnamnesesPDF a={data} logoData={logoData} praxis={praxis} />)
   const name = `Anamnesebogen_${data.client.nachname}_${formatDate(data.datum).replace(/\./g, '-')}.pdf`
   return new Response(nodeStreamToWeb(stream), {
     headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${name}"` },
