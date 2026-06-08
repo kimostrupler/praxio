@@ -38,7 +38,7 @@ Private client management web app for **FitAllCoach by Joelle** — a health and
 | Styling | Tailwind CSS v3 |
 | ORM | Prisma v5 + PostgreSQL 16 |
 | Auth | NextAuth v4 — JWT sessions, credentials provider, bcrypt (cost 12) |
-| PDF | `@react-pdf/renderer` v3 |
+| PDF | `@react-pdf/renderer` v4 (requires React 19) |
 | Runtime (production) | Node 22 LTS + PM2 on Ubuntu 22.04 LXC |
 | Runtime (local dev) | Node 22 Alpine via Docker Compose |
 

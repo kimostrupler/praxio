@@ -128,24 +128,27 @@ export async function updatePraxisKontakt(data: {
   if (!await getServerSession(authOptions)) return { error: 'Nicht angemeldet.' }
 
   const updates = {
-    PRAXIS_ADRESSE:        data.adresse,
-    PRAXIS_STRASSE:        data.strasse,
-    PRAXIS_PLZ:            data.plz,
-    PRAXIS_ORT:            data.ort,
-    PRAXIS_TELEFON:        data.telefon,
-    PRAXIS_EMAIL_ADDR:     data.email,
-    PRAXIS_WEBSITE:        data.website,
-    PRAXIS_MWST_NR:        data.mwstNr,
-    PRAXIS_IBAN:           data.iban,
-    PRAXIS_QR_IBAN:        data.qrIban,
-    PRAXIS_BANK:           data.bank,
-    PRAXIS_BIC:            data.bic,
-    RECHNUNG_MWST_DEFAULT:    data.rechnungMwst,
-    RECHNUNG_BETREFF_DEFAULT: data.rechnungBetreff,
-    RECHNUNG_TEXT_DEFAULT:    data.rechnungText,
+    praxisAdresse:  data.adresse,
+    praxisStrasse:  data.strasse,
+    praxisPlz:      data.plz,
+    praxisOrt:      data.ort,
+    praxisTelefon:  data.telefon,
+    praxisEmail:    data.email,
+    praxisWebsite:  data.website,
+    praxisMwstNr:   data.mwstNr,
+    praxisIban:     data.iban,
+    praxisQrIban:   data.qrIban,
+    praxisBank:     data.bank,
+    praxisBic:      data.bic,
+    rechnungMwst:    data.rechnungMwst,
+    rechnungBetreff: data.rechnungBetreff,
+    rechnungText:    data.rechnungText,
   }
-  patchEnv(updates)
-  for (const [k, v] of Object.entries(updates)) process.env[k] = v
+  await prisma.appSettings.upsert({
+    where:  { id: 'singleton' },
+    create: { id: 'singleton', ...updates },
+    update: updates,
+  })
 
   return { success: true }
 }

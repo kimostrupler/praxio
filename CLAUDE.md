@@ -122,7 +122,7 @@ Call `revalidateTag('tag')` + `revalidatePath()` then `redirect()` on success.
 
 **Next.js 15 async params** -- `params` and `searchParams` are now Promises. Always destructure with `await props.params` / `await props.searchParams` before accessing fields.
 
-**Praxis config** (name, address, phone, etc.) → import from `@/lib/praxis`. Never read `process.env.PRAXIS_*` directly in routes or components.
+**Praxis config** (name, address, phone, IBAN, invoice defaults, etc.) → call `getPraxisConfig()` from `@/lib/praxis`. Stored in the `AppSettings` singleton row (DB-backed since Phase 2 — editable at runtime via Settings → Kontakt, no restart needed). Never read `process.env.PRAXIS_*` directly in routes or components.
 
 **File paths** (logo.b64, vertrag-leistungen.txt) → import `LOGO_FILE` / `VERTRAG_FILE` from `@/lib/data-paths`. Never hardcode these paths.
 
@@ -198,7 +198,7 @@ Schema changes use `prisma db push` — in production, run manually: `npx prisma
 | Styling | Tailwind CSS v3 |
 | ORM | Prisma v5 + PostgreSQL 16 |
 | Auth | NextAuth v4 (credentials, bcryptjs) |
-| PDF | `@react-pdf/renderer` v3 |
+| PDF | `@react-pdf/renderer` v4 (requires React 19 — see PDF generation section) |
 | Runtime (production) | Node 22 LTS + PM2 on Ubuntu 22.04 LXC |
 | Runtime (local dev) | Node 22 Alpine via Docker Compose |
 
@@ -328,7 +328,7 @@ src/
     auth.ts          # NextAuth config — bcrypt password verify + IP rate limit check
     rate-limit.ts    # In-memory Map: 5 failed logins → 15-min lockout per IP
     db.ts            # Prisma singleton
-    praxis.ts        # All PRAXIS_* env vars — import from here, never process.env directly
+    praxis.ts        # getPraxisConfig() — reads the AppSettings singleton row (DB-backed since Phase 2)
     data-paths.ts    # LOGO_FILE + VERTRAG_FILE path constants — import everywhere
     pdf.tsx          # Shared PDF design system: C colors, base StyleSheet, PdfHeader component,
                      # nodeStreamToWeb(), formatDate(). Import in all PDF routes.
@@ -533,7 +533,7 @@ Calls `getCachedClients()`, `getCachedRecentClients()`, `getCachedRechnungen()`,
 All PDF routes share:
 - Design system from `lib/pdf.tsx`: `C` (colors), `base` (StyleSheet), `PdfHeader` component
 - Stream conversion: `nodeStreamToWeb(stream)` from `lib/pdf.tsx`
-- Praxis config: named exports from `lib/praxis.ts`
+- Praxis config: `await getPraxisConfig()` from `lib/praxis.ts`
 - Logo: `getLogoData()` called in GET handler, passed as `logoData` prop to PDF component
 
 react-pdf layout rules:
@@ -542,6 +542,8 @@ react-pdf layout rules:
 - `marginTop: 'auto'` → not supported
 - Unicode glyphs (✂, etc.) → silently absent in Helvetica, use SVG instead
 - `wrap={false}` on a section → whole section moves to next page if it doesn't fit
+
+**React version pin — do not downgrade `react`/`react-dom` below 19.** Next.js 15's App Router compiles route-file JSX with its internally bundled React 19 (`Symbol.for('react.transitional.element')` element marker). `@react-pdf/renderer` v3 was built for React 18 (`Symbol.for('react.element')`) — the mismatch made every `<Document>`/`<Page>`/`<Text>` element invisible to its reconciler, and **every PDF route returned HTTP 500** ("Minified React error #31: Objects are not valid as a React child"). Fixed by upgrading `react`/`react-dom` to `^19` and `@react-pdf/renderer` to `^4.5.1` (its first major with a React-19-compatible reconciler). No source changes were required — keep both pinned together.
 
 ### Rechnung PDF — QR bill
 
@@ -818,7 +820,7 @@ This section documents recurring failures from AI-generated code. Every rule her
 
 **No wrapper modules for single function calls.** `lib/authed.ts` was a 3-line file wrapping `getServerSession(authOptions)`. It was deleted. If removing a file and replacing its import with a direct call changes nothing observable, the file should not exist.
 
-**Config has one owner.** All `PRAXIS_*` env vars live in `lib/praxis.ts`. All filesystem paths in `lib/data-paths.ts`. No other file reads `process.env.PRAXIS_*` directly.
+**Config has one owner.** Praxis config (name, address, IBAN, invoice defaults, etc.) lives in the `AppSettings` singleton DB row, accessed exclusively via `getPraxisConfig()` in `lib/praxis.ts`. All filesystem paths in `lib/data-paths.ts`. No other file queries `AppSettings` for praxis fields or reads `process.env.PRAXIS_*` directly.
 
 **Middleware handles route auth; layouts do not.** The dashboard layout does NOT call `getServerSession`. Middleware is authoritative. Duplicating auth in layouts adds a useless DB roundtrip.
 

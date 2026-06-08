@@ -4,12 +4,13 @@ import Link from 'next/link'
 import AnamneseBearbeitenForm from '@/components/AnamneseBearbeitenForm'
 import type { AnamneseFormData } from '@/app/actions/clients'
 import type { Anamnese } from '@prisma/client'
+import { parseJsonArray } from '@/lib/client-utils'
 
 function toFormData(a: Anamnese): AnamneseFormData {
   const str = (v: number | null) => v != null ? String(v) : ''
   const bool = (v: boolean | null) => v === true ? 'ja' : v === false ? 'nein' : ''
   return {
-    ziele: a.ziele,
+    ziele: parseJsonArray(a.ziele),
     zieleSonstiges: a.zieleSonstiges ?? '',
     motivation: a.motivation ?? '',
     zielWichtigkeit: a.zielWichtigkeit ?? 5,
@@ -26,7 +27,7 @@ function toFormData(a: Anamnese): AnamneseFormData {
     sonstigeMasse: a.sonstigeMasse ?? '',
     ernaehrungBewertung: a.ernaehrungBewertung ?? '',
     mahlzeitenProTag: a.mahlzeitenProTag != null ? String(a.mahlzeitenProTag) : '',
-    essgewohnheiten: a.essgewohnheiten,
+    essgewohnheiten: parseJsonArray(a.essgewohnheiten),
     essgewohnheitenSonstiges: a.essgewohnheitenSonstiges ?? '',
     lebensmittelUnvertraeglichkeit: bool(a.lebensmittelUnvertraeglichkeit),
     lebensmittelUnvertraeglichkeitWelche: a.lebensmittelUnvertraeglichkeitWelche ?? '',

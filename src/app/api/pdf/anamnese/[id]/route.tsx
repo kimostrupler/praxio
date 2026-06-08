@@ -3,7 +3,9 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { Document, Page, Text, View, StyleSheet, renderToStream } from '@react-pdf/renderer'
 import { getLogoData } from '@/lib/logo'
-import { C, base, formatDate, nodeStreamToWeb, praxisName, PdfHeader } from '@/lib/pdf'
+import { C, base, formatDate, nodeStreamToWeb, PdfHeader } from '@/lib/pdf'
+import { getPraxisConfig, type PraxisConfig } from '@/lib/praxis'
+import { parseJsonArray } from '@/lib/client-utils'
 
 const s = StyleSheet.create({
   clientRow:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
@@ -62,17 +64,19 @@ async function fetchData(id: string) {
 
 type AnamneseData = NonNullable<Awaited<ReturnType<typeof fetchData>>>
 
-function AnamnesesPDF({ a, logoData }: { a: AnamneseData; logoData: string | null }) {
+function AnamnesesPDF({ a, logoData, praxis }: { a: AnamneseData; logoData: string | null; praxis: PraxisConfig }) {
   const client = a.client
   const bmiVal = a.aktuellesGewicht && a.groesse
     ? (a.aktuellesGewicht / Math.pow(a.groesse / 100, 2)).toFixed(1)
     : null
+  const aZiele = parseJsonArray(a.ziele)
+  const aEssgewohnheiten = parseJsonArray(a.essgewohnheiten)
 
   return (
-    <Document title={`Anamnesebogen – ${client.vorname} ${client.nachname}`} author={praxisName}>
+    <Document title={`Anamnesebogen – ${client.vorname} ${client.nachname}`} author={praxis.name}>
       <Page size="A4" style={base.page}>
         <View style={base.topStrip} fixed />
-        <PdfHeader title="Anamnesebogen" date={formatDate(a.datum)} logoData={logoData} />
+        <PdfHeader title="Anamnesebogen" date={formatDate(a.datum)} logoData={logoData} praxisName={praxis.name} praxisSubtitle={praxis.subtitle} />
         <View style={base.dividerBold} />
 
         <View style={s.clientRow}>
@@ -84,13 +88,13 @@ function AnamnesesPDF({ a, logoData }: { a: AnamneseData; logoData: string | nul
           </View>
         </View>
 
-        {(a.ziele.length > 0 || a.motivation) && (
+        {(aZiele.length > 0 || a.motivation) && (
           <Sec title="Ziele & Motivation">
-            {a.ziele.length > 0 && (
+            {aZiele.length > 0 && (
               <View style={s.cellFull}>
                 <Text style={s.label}>Ziele</Text>
                 <View style={s.tags}>
-                  {a.ziele.map(z => <Text key={z} style={s.tag}>{z}</Text>)}
+                  {aZiele.map(z => <Text key={z} style={s.tag}>{z}</Text>)}
                 </View>
               </View>
             )}
@@ -122,19 +126,19 @@ function AnamnesesPDF({ a, logoData }: { a: AnamneseData; logoData: string | nul
           <Row label="Alkohol"              value={V(a.alkoholPortionen, ' Port./Woche')} />
           <Row label="Softdrinks"           value={V(a.softdrinksLiter, ' L/Tag')} />
           <Row label="Ernährungstagebuch"   value={B(a.ernaehrungstagebuch)} />
-          {a.essgewohnheiten.length > 0 && <RowFull label="Essgewohnheiten" value={a.essgewohnheiten.join(', ')} />}
+          {aEssgewohnheiten.length > 0 && <RowFull label="Essgewohnheiten" value={aEssgewohnheiten.join(', ')} />}
           {a.lebensmittelUnvertraeglichkeit && <RowFull label="Unverträglichkeiten" value={a.lebensmittelUnvertraeglichkeitWelche} />}
         </Sec>
 
         <View style={base.footer} fixed>
-          <Text style={base.footerText}>{praxisName} · Anamnesebogen · {client.vorname} {client.nachname}</Text>
+          <Text style={base.footerText}>{praxis.name} · Anamnesebogen · {client.vorname} {client.nachname}</Text>
           <Text style={base.footerText} render={({ pageNumber, totalPages }) => `Seite ${pageNumber} von ${totalPages}`} />
         </View>
       </Page>
 
       <Page size="A4" style={base.page}>
         <View style={base.topStrip} fixed />
-        <PdfHeader title="Anamnesebogen" date={`${client.vorname} ${client.nachname} · ${formatDate(a.datum)}`} logoData={logoData} />
+        <PdfHeader title="Anamnesebogen" date={`${client.vorname} ${client.nachname} · ${formatDate(a.datum)}`} logoData={logoData} praxisName={praxis.name} praxisSubtitle={praxis.subtitle} />
         <View style={base.dividerBold} />
 
         <Sec title="Alltag & Lifestyle">
@@ -172,7 +176,7 @@ function AnamnesesPDF({ a, logoData }: { a: AnamneseData; logoData: string | nul
         </Sec>
 
         <View style={base.footer} fixed>
-          <Text style={base.footerText}>{praxisName} · Anamnesebogen · {client.vorname} {client.nachname}</Text>
+          <Text style={base.footerText}>{praxis.name} · Anamnesebogen · {client.vorname} {client.nachname}</Text>
           <Text style={base.footerText} render={({ pageNumber, totalPages }) => `Seite ${pageNumber} von ${totalPages}`} />
         </View>
       </Page>
@@ -189,7 +193,8 @@ export async function GET(_: Request, props: { params: Promise<{ id: string }> }
   if (!data) return new Response('Not found', { status: 404 })
 
   const logoData = getLogoData()
-  const stream = await renderToStream(<AnamnesesPDF a={data} logoData={logoData} />)
+  const praxis = await getPraxisConfig()
+  const stream = await renderToStream(<AnamnesesPDF a={data} logoData={logoData} praxis={praxis} />)
   const name = `Anamnesebogen_${data.client.nachname}_${formatDate(data.datum).replace(/\./g, '-')}.pdf`
   return new Response(nodeStreamToWeb(stream), {
     headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${name}"` },

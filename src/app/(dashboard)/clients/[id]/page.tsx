@@ -3,8 +3,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { avatarColor } from '@/lib/avatar'
 import { CHF, rBrutto, RECHNUNG_STATUS_LABEL, RECHNUNG_STATUS_STYLE } from '@/lib/formatting'
-import { buildGewichtsDaten } from '@/lib/client-utils'
-import { praxisName } from '@/lib/praxis'
+import { buildGewichtsDaten, parseJsonArray } from '@/lib/client-utils'
+import { getPraxisConfig } from '@/lib/praxis'
 import ZieleBlock from '@/components/ZieleBlock'
 import CollapsibleSection from '@/components/CollapsibleSection'
 import MessungForm from '@/components/MessungForm'
@@ -80,7 +80,7 @@ export default async function ClientDetailPage(
   const params = await props.params;
   const tab = searchParams.tab ?? 'uebersicht'
 
-  const [client, clientRechnungen, messungen] = await Promise.all([
+  const [client, clientRechnungen, messungen, praxis] = await Promise.all([
     prisma.client.findUnique({
       where: { id: params.id },
       include: {
@@ -114,6 +114,7 @@ export default async function ClientDetailPage(
       where: { clientId: params.id },
       orderBy: { datum: 'asc' },
     }),
+    getPraxisConfig(),
   ])
   if (!client) notFound()
 
@@ -288,7 +289,7 @@ export default async function ClientDetailPage(
               </div>
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <ClientStatusSelect clientId={params.id} status={client.status} />
-                <ClientTags clientId={params.id} initialTags={client.tags} />
+                <ClientTags clientId={params.id} initialTags={parseJsonArray(client.tags)} />
               </div>
             </div>
           </div>
@@ -306,7 +307,7 @@ export default async function ClientDetailPage(
               clientId={params.id}
               clientEmail={client.email ?? null}
               clientVorname={client.vorname}
-              praxisName={praxisName}
+              praxisName={praxis.name}
               hasPlaene={client.trainingsplaene.length > 0}
               hasErnaehrung={client.ernaehrungsplaene.length > 0}
             />
@@ -549,7 +550,7 @@ export default async function ClientDetailPage(
                       {latest.stressLevel != null && <span className="text-[#666666]">Stress {latest.stressLevel}/10</span>}
                       {latest.schlafStunden != null && <span className="text-[#666666]">{latest.schlafStunden}h Schlaf</span>}
                       {latest.wohlbefinden && <span className="text-[#666666]">Befinden: {latest.wohlbefinden}</span>}
-                      {latest.ziele.length > 0 && <span className="text-[#666666]">Ziele: {latest.ziele.join(', ')}</span>}
+                      {parseJsonArray(latest.ziele).length > 0 && <span className="text-[#666666]">Ziele: {parseJsonArray(latest.ziele).join(', ')}</span>}
                     </div>
                   </div>
                 ) : (

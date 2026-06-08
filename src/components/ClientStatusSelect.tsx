@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react'
 import { updateClientStatus } from '@/app/actions/clients'
-import type { ClientStatus } from '@prisma/client'
+import type { ClientStatus } from '@/lib/formatting'
 
 const OPTIONS: { value: ClientStatus; label: string }[] = [
   { value: 'AKTIV',    label: 'Aktiv'    },
@@ -10,13 +10,13 @@ const OPTIONS: { value: ClientStatus; label: string }[] = [
   { value: 'INAKTIV',  label: 'Inaktiv'  },
 ]
 
-const ACTIVE_STYLE: Record<ClientStatus, string> = {
+const ACTIVE_STYLE: Record<string, string> = {
   AKTIV:    'bg-emerald-950/40 text-emerald-400 border-emerald-900/40',
   PAUSIERT: 'bg-orange-950/40 text-orange-400 border-orange-900/40',
   INAKTIV:  'bg-[#1c1c1c] text-[#555555] border-[#2e2e2e]',
 }
 
-export default function ClientStatusSelect({ clientId, status }: { clientId: string; status: ClientStatus }) {
+export default function ClientStatusSelect({ clientId, status }: { clientId: string; status: string }) {
   const [pending, start] = useTransition()
 
   return (

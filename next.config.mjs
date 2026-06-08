@@ -1,5 +1,8 @@
+const isDesktop = process.env.NEXT_PUBLIC_IS_DESKTOP === 'true'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  ...(isDesktop ? { output: 'standalone' } : {}),
   serverExternalPackages: ['@react-pdf/renderer'],
   async headers() {
     return [

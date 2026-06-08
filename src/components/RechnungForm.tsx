@@ -11,7 +11,7 @@ type Client = {
   id: string
   vorname: string
   nachname: string
-  geschlecht: 'WEIBLICH' | 'MAENNLICH' | 'DIVERS' | null
+  geschlecht: string | null
 }
 
 // ── Presets from fitallcoach.ch ───────────────────────────────────────────────

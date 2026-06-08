@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db'
 import { Document, Page, Text, View, StyleSheet, Image, renderToStream } from '@react-pdf/renderer'
 import { getLogoData } from '@/lib/logo'
 import { nodeStreamToWeb } from '@/lib/pdf'
-import { praxisName, praxisSubtitle, praxisAdresse, praxisEmail, praxisTel } from '@/lib/praxis'
+import { getPraxisConfig, type PraxisConfig } from '@/lib/praxis'
 import fs from 'fs'
 import path from 'path'
 
@@ -102,14 +102,15 @@ async function fetchClient(id: string) {
 }
 
 
-function VertragPDF({ client, leistungen, datum, logoData }: {
+function VertragPDF({ client, leistungen, datum, logoData, praxis }: {
   client: NonNullable<Awaited<ReturnType<typeof fetchClient>>>
   leistungen: string
   datum: Date
   logoData: string | null
+  praxis: PraxisConfig
 }) {
   return (
-    <Document title={`Coaching-Vertrag – ${client.vorname} ${client.nachname}`} author={praxisName}>
+    <Document title={`Coaching-Vertrag – ${client.vorname} ${client.nachname}`} author={praxis.name}>
       <Page size="A4" style={s.page}>
         <View style={s.topStrip} fixed />
 
@@ -119,8 +120,8 @@ function VertragPDF({ client, leistungen, datum, logoData }: {
             {logoData
               ? <Image src={logoData} style={{ height: 38, objectFit: 'contain' }} />
               : <>
-                  <Text style={s.brand}>{praxisName}</Text>
-                  <Text style={s.brandSub}>{praxisSubtitle}</Text>
+                  <Text style={s.brand}>{praxis.name}</Text>
+                  <Text style={s.brandSub}>{praxis.subtitle}</Text>
                 </>
             }
           </View>
@@ -142,10 +143,10 @@ function VertragPDF({ client, leistungen, datum, logoData }: {
           </View>
           <View style={s.partyBox}>
             <Text style={s.partyRole}>Coach · Auftragnehmerin</Text>
-            <Text style={s.partyName}>{praxisName}</Text>
-            {praxisAdresse ? praxisAdresse.split(',').map((l, i) => <Text key={i} style={s.partyLine}>{l.trim()}</Text>) : null}
-            {praxisEmail ? <Text style={s.partyLine}>{praxisEmail}</Text> : null}
-            {praxisTel   ? <Text style={s.partyLine}>{praxisTel}</Text>   : null}
+            <Text style={s.partyName}>{praxis.name}</Text>
+            {praxis.adresse ? praxis.adresse.split(',').map((l, i) => <Text key={i} style={s.partyLine}>{l.trim()}</Text>) : null}
+            {praxis.email ? <Text style={s.partyLine}>{praxis.email}</Text> : null}
+            {praxis.telefon ? <Text style={s.partyLine}>{praxis.telefon}</Text> : null}
           </View>
         </View>
 
@@ -182,14 +183,14 @@ function VertragPDF({ client, leistungen, datum, logoData }: {
           <View style={s.sigBox}>
             <View style={s.sigSpace} />
             <View style={s.sigLine} />
-            <Text style={s.sigName}>{praxisName}</Text>
+            <Text style={s.sigName}>{praxis.name}</Text>
             <Text style={s.sigLabel}>Ort, Datum · Coach</Text>
           </View>
         </View>
 
         {/* ── Footer ── */}
         <View style={s.footer} fixed>
-          <Text style={s.footerText}>{praxisName} · Coaching-Vertrag · {client.vorname} {client.nachname}</Text>
+          <Text style={s.footerText}>{praxis.name} · Coaching-Vertrag · {client.vorname} {client.nachname}</Text>
           <Text style={s.footerText}>{Ds(datum)}</Text>
         </View>
 
@@ -212,8 +213,9 @@ export async function GET(_: Request, props: { params: Promise<{ clientId: strin
     : 'Ernährungs- und Trainingsberatung nach individueller Vereinbarung.'
 
   const logoData = getLogoData()
+  const praxis = await getPraxisConfig()
   const stream = await renderToStream(
-    <VertragPDF client={client} leistungen={leistungen} datum={new Date()} logoData={logoData} />
+    <VertragPDF client={client} leistungen={leistungen} datum={new Date()} logoData={logoData} praxis={praxis} />
   )
   const filename = `Vertrag_${client.nachname}_${client.vorname.replace(/\s/g, '_')}.pdf`
   return new Response(nodeStreamToWeb(stream), {

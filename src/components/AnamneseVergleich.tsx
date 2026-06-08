@@ -1,4 +1,5 @@
 import type { Anamnese } from '@prisma/client'
+import { parseJsonArray } from '@/lib/client-utils'
 
 type Props = { alt: Anamnese; neu: Anamnese }
 
@@ -69,8 +70,10 @@ function RatingCard({ label, altVal, neuVal, scoreMap }: {
 export default function AnamneseVergleich({ alt, neu }: Props) {
   const days = Math.round(Math.abs(new Date(neu.datum).getTime() - new Date(alt.datum).getTime()) / (1000 * 60 * 60 * 24))
   const d = (date: Date | string) => new Date(date).toLocaleDateString('de-DE')
-  const added = neu.ziele.filter(z => !alt.ziele.includes(z))
-  const removed = alt.ziele.filter(z => !neu.ziele.includes(z))
+  const neuZiele = parseJsonArray(neu.ziele)
+  const altZiele = parseJsonArray(alt.ziele)
+  const added = neuZiele.filter(z => !altZiele.includes(z))
+  const removed = altZiele.filter(z => !neuZiele.includes(z))
 
   return (
     <div className="bg-[#141414] border border-[#2e2e2e] rounded-xl p-5 md:p-6">

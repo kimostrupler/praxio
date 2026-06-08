@@ -1,6 +1,7 @@
 import { getCachedClients, getCachedRechnungen, getCachedStatistikenAggregates } from '@/lib/queries'
 import { CHF, rBrutto } from '@/lib/formatting'
 import Link from 'next/link'
+import { parseJsonArray } from '@/lib/client-utils'
 
 // ── Primitives ────────────────────────────────────────────────────────────────
 
@@ -154,7 +155,7 @@ export default async function StatistikenPage() {
   // Goals + presets
   const goalFreq: Record<string, number> = {}
   for (const a of goalCounts) {
-    for (const z of a.ziele) goalFreq[z] = (goalFreq[z] ?? 0) + 1
+    for (const z of parseJsonArray(a.ziele)) goalFreq[z] = (goalFreq[z] ?? 0) + 1
   }
   const topGoals  = Object.entries(goalFreq).sort((a, b) => b[1] - a[1]).slice(0, 8)
   const maxGoal   = topGoals[0]?.[1] ?? 1

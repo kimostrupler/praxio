@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/db'
 import { redirect } from 'next/navigation'
 import { revalidatePath, revalidateTag } from 'next/cache'
-import type { RechnungStatus } from '@prisma/client'
+import type { RechnungStatus } from '@/lib/formatting'
 import { getServerSession } from 'next-auth'
 import { audit } from '@/lib/audit'
 import { authOptions } from '@/lib/auth'

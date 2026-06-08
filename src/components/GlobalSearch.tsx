@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import type { ClientStatus, RechnungStatus } from '@prisma/client'
+import type { ClientStatus, RechnungStatus } from '@/lib/formatting'
 
 type SearchResults = {
   clients:    { id: string; vorname: string; nachname: string; status: ClientStatus; email: string | null }[]

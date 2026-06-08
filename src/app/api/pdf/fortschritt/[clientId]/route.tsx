@@ -4,7 +4,8 @@ import { prisma } from '@/lib/db'
 import { Document, Page, Text, View, StyleSheet, renderToStream } from '@react-pdf/renderer'
 import { getLogoData } from '@/lib/logo'
 import { C, base, formatDate, nodeStreamToWeb, PdfHeader } from '@/lib/pdf'
-import { buildGewichtsDaten } from '@/lib/client-utils'
+import { getPraxisConfig, type PraxisConfig } from '@/lib/praxis'
+import { buildGewichtsDaten, parseJsonArray } from '@/lib/client-utils'
 
 const s = StyleSheet.create({
   section:     { marginBottom: 20 },
@@ -55,7 +56,7 @@ async function fetchData(clientId: string) {
 
 type ClientData = NonNullable<Awaited<ReturnType<typeof fetchData>>>
 
-function FortschrittPDF({ client, logoData }: { client: ClientData; logoData: string | null }) {
+function FortschrittPDF({ client, logoData, praxis }: { client: ClientData; logoData: string | null; praxis: PraxisConfig }) {
   const first  = client.anamnesen[0]
   const latest = client.anamnesen[client.anamnesen.length - 1]
   const hasTwo = client.anamnesen.length >= 2 && first?.id !== latest?.id
@@ -70,7 +71,7 @@ function FortschrittPDF({ client, logoData }: { client: ClientData; logoData: st
     <Document title={`Fortschrittsbericht – ${client.vorname} ${client.nachname}`}>
       <Page size="A4" style={base.page}>
         <View style={base.topStrip} fixed />
-        <PdfHeader title="Fortschrittsbericht" date={formatDate(new Date())} logoData={logoData} />
+        <PdfHeader title="Fortschrittsbericht" date={formatDate(new Date())} logoData={logoData} praxisName={praxis.name} praxisSubtitle={praxis.subtitle} />
         <View style={base.dividerBold} />
 
         <Text style={base.clientName}>{client.vorname} {client.nachname}</Text>
@@ -125,11 +126,11 @@ function FortschrittPDF({ client, logoData }: { client: ClientData; logoData: st
               </View>
             )}
 
-            {latest.ziele.length > 0 && (
+            {parseJsonArray(latest.ziele).length > 0 && (
               <View style={{ marginTop: 8 }}>
                 <Text style={[s.rowLabel, { marginBottom: 4 }]}>Ziele</Text>
                 <View style={s.tagRow}>
-                  {latest.ziele.map(z => <Text key={z} style={s.tag}>{z}</Text>)}
+                  {parseJsonArray(latest.ziele).map(z => <Text key={z} style={s.tag}>{z}</Text>)}
                 </View>
               </View>
             )}
@@ -250,7 +251,8 @@ export async function GET(_: Request, props: { params: Promise<{ clientId: strin
   if (!data) return new Response('Not found', { status: 404 })
 
   const logoData = getLogoData()
-  const stream = await renderToStream(<FortschrittPDF client={data} logoData={logoData} />)
+  const praxis = await getPraxisConfig()
+  const stream = await renderToStream(<FortschrittPDF client={data} logoData={logoData} praxis={praxis} />)
   const name = `Fortschritt_${data.nachname}_${data.vorname.replace(/\s/g, '_')}.pdf`
   return new Response(nodeStreamToWeb(stream), {
     headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${name}"` },

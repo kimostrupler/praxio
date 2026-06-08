@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db'
 import RechnungForm from '@/components/RechnungForm'
+import { getPraxisConfig } from '@/lib/praxis'
 
 export default async function NeueRechnungPage(
   props: {
@@ -7,10 +8,13 @@ export default async function NeueRechnungPage(
   }
 ) {
   const searchParams = await props.searchParams;
-  const clients = await prisma.client.findMany({
-    orderBy: [{ nachname: 'asc' }, { vorname: 'asc' }],
-    select: { id: true, vorname: true, nachname: true, geschlecht: true },
-  })
+  const [clients, praxis] = await Promise.all([
+    prisma.client.findMany({
+      orderBy: [{ nachname: 'asc' }, { vorname: 'asc' }],
+      select: { id: true, vorname: true, nachname: true, geschlecht: true },
+    }),
+    getPraxisConfig(),
+  ])
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-3xl">
@@ -24,9 +28,9 @@ export default async function NeueRechnungPage(
       <RechnungForm
         clients={clients}
         initialClientId={searchParams.clientId}
-        initialMwst={process.env.RECHNUNG_MWST_DEFAULT     ?? '0'}
-        initialBetreff={process.env.RECHNUNG_BETREFF_DEFAULT ?? ''}
-        initialTextBody={process.env.RECHNUNG_TEXT_DEFAULT   ?? ''}
+        initialMwst={praxis.rechnungMwst}
+        initialBetreff={praxis.rechnungBetreff}
+        initialTextBody={praxis.rechnungText}
       />
     </div>
   )

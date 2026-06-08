@@ -1,3 +1,9 @@
+export function parseJsonArray(v: unknown): string[] {
+  if (Array.isArray(v)) return v as string[]
+  if (typeof v !== 'string' || !v) return []
+  try { const p = JSON.parse(v); return Array.isArray(p) ? p : [] } catch { return [] }
+}
+
 export type GewichtsEintrag = {
   datum: Date
   gewicht: number

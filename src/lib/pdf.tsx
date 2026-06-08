@@ -1,6 +1,4 @@
 import { StyleSheet, Text, View, Image } from '@react-pdf/renderer'
-import { praxisName, praxisSubtitle } from './praxis'
-export { praxisName, praxisSubtitle }
 
 export const C = {
   black:       '#0a0a0a',
@@ -52,11 +50,13 @@ export function nodeStreamToWeb(stream: any): ReadableStream<Uint8Array> {
 }
 
 export function PdfHeader({
-  title, date, logoData, large,
+  title, date, logoData, praxisName, praxisSubtitle, large,
 }: {
   title: string
   date: string
   logoData: string | null
+  praxisName: string
+  praxisSubtitle: string
   large?: boolean
 }) {
   return (

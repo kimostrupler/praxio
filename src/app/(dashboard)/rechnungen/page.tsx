@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import RechnungAktionen from '@/components/RechnungAktionen'
-import type { RechnungStatus } from '@prisma/client'
+import type { RechnungStatus } from '@/lib/formatting'
 import { getCachedRechnungen } from '@/lib/queries'
 import { CHF, RECHNUNG_STATUS_LABEL, RECHNUNG_STATUS_STYLE } from '@/lib/formatting'
 
